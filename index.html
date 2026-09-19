@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>태극기 주사위 게임 — 테스트 버전</title>
+<style>
+:root{
+  --paper:#F6F2E7; --paper2:#FBF8F1; --ink:#211C15; --ink-dim:#5A5347;
+  --line:#D8CFBB; --gold:#9C7A32; --gold-soft:#E8DCBE;
+  --black-die:#211C15; --white-die:#FBF8F1; --red-die:#B0362E; --blue-die:#2C4E86;
+  --warn:#B0362E; --ok:#3E6B4A; --shadow:0 2px 10px rgba(33,28,21,.12);
+  --radius:10px; --serif:"Noto Serif KR","Songti SC",Georgia,"Nanum Myeongjo",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--sans);}
+body{min-height:100vh;}
+h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0 0 .4em;}
+button{font-family:var(--sans);cursor:pointer;}
+.hidden{display:none !important;}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 16px 60px;}
+.topbar{display:flex;align-items:baseline;gap:10px;padding:14px 16px 6px;}
+.topbar .mark{font-size:22px;}
+.topbar h1{font-size:19px;margin:0;}
+.topbar .sub{color:var(--ink-dim);font-size:12.5px;}
+
+.card{background:var(--paper2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+.card + .card{margin-top:14px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;color:var(--ink-dim);margin-bottom:5px;}
+.field select,.field input[type=number]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:14.5px;color:var(--ink);}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.row > *{flex:1;min-width:120px;}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--paper2);border-radius:8px;padding:10px 16px;font-size:14.5px;font-weight:600;}
+.btn:hover{opacity:.88;}
+.btn.secondary{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500;}
+.btn.small{padding:6px 11px;font-size:13px;border-radius:7px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.seatlist{display:flex;flex-direction:column;gap:8px;}
+.seat{display:flex;align-items:center;gap:10px;}
+.seat .name{width:64px;font-size:13.5px;color:var(--ink-dim);}
+.seat select{flex:1;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;}
+
+#screen-game{display:none;}
+.gheader{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px;background:var(--paper2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;}
+.gheader .round{font-family:var(--serif);font-size:17px;}
+.gheader .order{font-size:12.5px;color:var(--ink-dim);}
+.gheader .toggles{display:flex;gap:6px;}
+.toggle-chip{padding:5px 10px;border:1px solid var(--line);border-radius:20px;font-size:12px;background:#fff;color:var(--ink-dim);}
+.toggle-chip.on{background:var(--gold-soft);border-color:var(--gold);color:var(--ink);}
+
+.scoreboard{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.score-chip{background:var(--paper2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;min-width:96px;}
+.score-chip.active{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft) inset;}
+.score-chip .nm{font-size:12.5px;color:var(--ink-dim);display:flex;justify-content:space-between;}
+.score-chip .sc{font-family:var(--serif);font-size:20px;}
+
+.pool-wrap{margin-bottom:10px;}
+.pool-wrap h3{font-size:13px;color:var(--ink-dim);margin-bottom:6px;font-family:var(--sans);font-weight:600;}
+.pool{display:flex;gap:8px;flex-wrap:wrap;}
+.bagline{font-size:12px;color:var(--ink-dim);margin-top:6px;}
+
+.die{width:46px;height:46px;border-radius:9px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:700;position:relative;}
+.die span{font-size:17px;line-height:1;}
+.die em{font-style:normal;font-size:10px;opacity:.85;margin-top:1px;}
+.die.black{background:var(--black-die);color:#fff;}
+.die.white{background:var(--white-die);color:var(--ink);}
+.die.red{background:var(--red-die);color:#fff;}
+.die.blue{background:var(--blue-die);color:#fff;}
+button.die{cursor:pointer;}
+button.die.selected{outline:3px solid var(--gold);outline-offset:2px;}
+button.die[disabled]{opacity:.3;cursor:default;}
+
+.maingrid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;}
+@media (max-width:860px){.maingrid{grid-template-columns:1fr;}}
+
+.mainboard-area .who{font-family:var(--serif);font-size:16px;margin-bottom:8px;}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:300px;margin:0 auto;}
+.board.big{max-width:340px;}
+.cell{aspect-ratio:1;border:1.5px dashed var(--line);border-radius:9px;display:flex;align-items:center;justify-content:center;background:#fff;position:relative;padding:0;}
+.cell.valid{border-color:var(--gold);background:var(--gold-soft);}
+.cell.warn::after{content:"";position:absolute;inset:0;border-radius:8px;border:2px solid var(--warn);}
+.cell.choice{outline:3px solid var(--gold);outline-offset:1px;}
+.cell .die{width:88%;height:88%;font-size:inherit;cursor:pointer;}
+.cell .die span{font-size:20px;}
+.linehints{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;justify-content:center;}
+.linehint{font-size:10.5px;padding:3px 7px;border-radius:12px;border:1px solid var(--line);color:var(--ink-dim);background:#fff;}
+.linehint.dead{color:#9a9186;text-decoration:line-through;}
+.linehint.eye{color:var(--warn);border-color:var(--warn);}
+
+.message{margin-top:10px;padding:10px 12px;background:var(--gold-soft);border:1px solid var(--gold);border-radius:9px;font-size:13.5px;min-height:20px;}
+.choicebar{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+
+.flagcard{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;}
+.flagcard h4{margin:0 0 6px;font-size:12.5px;color:var(--ink-dim);font-weight:600;}
+.pieces{display:flex;gap:6px;flex-wrap:wrap;}
+.piece{border:1.5px solid var(--line);border-radius:8px;padding:7px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;background:#fff;min-width:48px;font-size:11px;color:var(--ink-dim);}
+.piece b{font-size:15px;color:var(--ink);font-weight:700;}
+.piece.selectable{border-color:var(--gold);background:var(--gold-soft);cursor:pointer;}
+.piece[disabled]{opacity:.35;}
+.flagcount{margin-top:6px;font-size:12.5px;}
+
+.others{display:flex;flex-direction:column;gap:10px;}
+.opp{border:1px solid var(--line);border-radius:9px;padding:10px;background:#fff;}
+.opp header{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;}
+.opp header b{font-family:var(--serif);font-size:14px;}
+.miniboard{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;max-width:132px;}
+.minicell{aspect-ratio:1;border:1px solid var(--line);border-radius:5px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.minicell.black{background:var(--black-die);color:#fff;}
+.minicell.white{background:var(--white-die);color:var(--ink);border-color:var(--ink);}
+.minicell.red{background:var(--red-die);color:#fff;}
+.minicell.blue{background:var(--blue-die);color:#fff;}
+.oppflags{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;}
+.oppflags span{font-size:10.5px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:2px 6px;}
+.opphints{margin-top:6px;font-size:10.5px;color:var(--ink-dim);display:flex;flex-wrap:wrap;gap:4px;}
+.opphints em{font-style:normal;border:1px dashed var(--gold);color:var(--ink);border-radius:8px;padding:1px 6px;}
+
+.logpanel{margin-top:12px;}
+.logpanel .lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.logbox{max-height:170px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;background:#fff;padding:8px 10px;font-size:12px;color:var(--ink-dim);}
+.logbox .entry{padding:3px 0;border-bottom:1px dashed var(--line);}
+.logbox .entry:last-child{border-bottom:none;}
+
+.overlay{position:fixed;inset:0;background:rgba(33,28,21,.92);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;text-align:center;padding:20px;}
+.overlay h2{font-family:var(--serif);font-size:24px;color:#fff;}
+.overlay .btn{background:var(--gold);border-color:var(--gold);color:var(--ink);padding:13px 28px;font-size:16px;}
+
+#screen-result{display:none;}
+table.result{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.result th,table.result td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);}
+table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
+.rankname{font-family:var(--serif);font-size:14.5px;}
+
+#batchResult table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px;}
+#batchResult th,#batchResult td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:right;}
+#batchResult th:first-child,#batchResult td:first-child{text-align:left;}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:80;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="topbar"><span class="mark">☯</span><h1>태극기 주사위 게임</h1><span class="sub">테스트 버전 · 룰북 v0.9.3</span></div>
+
+<div class="wrap">
+
+<div id="screen-setup">
+  <div class="card">
+    <h2>새 게임</h2>
+    <div class="field">
+      <label>인원</label>
+      <select id="setN">
+        <option value="3">3인</option>
+        <option value="4" selected>4인</option>
+        <option value="5">5인</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>자리</label>
+      <div class="seatlist" id="seatlist"></div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>AI 속도</label>
+        <select id="setSpeed">
+          <option value="1200">느리게</option>
+          <option value="600" selected>보통</option>
+          <option value="0">즉시</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>난수 시드 (비우면 무작위)</label>
+        <input type="number" id="setSeed" placeholder="예: 20260919">
+      </div>
+    </div>
+    <button class="btn" id="startBtn">게임 시작</button>
+  </div>
+
+  <div class="card">
+    <h2>AI 전용 연속 실행</h2>
+    <p style="color:var(--ink-dim);font-size:13px;margin-top:-6px;">모든 자리를 AI로 채워 규칙 엔진만 여러 판 돌립니다. 화면 연출 없이 빠르게 진행됩니다.</p>
+    <div class="row">
+      <div class="field">
+        <label>인원</label>
+        <select id="batchN"><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option></select>
+      </div>
+      <div class="field">
+        <label>시드</label>
+        <input type="number" id="batchSeed" placeholder="비우면 무작위">
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn secondary" data-batch="10">10판</button>
+      <button class="btn secondary" data-batch="100">100판</button>
+      <button class="btn secondary" data-batch="500">500판</button>
+    </div>
+    <div id="batchStatus" style="margin-top:10px;font-size:13px;color:var(--ink-dim);"></div>
+    <div id="batchResult"></div>
+    <button class="btn small secondary hidden" id="batchSaveBtn" style="margin-top:10px;">배치 결과 JSON 저장</button>
+  </div>
+</div>
+
+<div id="screen-game">
+  <div class="gheader">
+    <div>
+      <div class="round" id="roundLabel">라운드 1 / 8</div>
+      <div class="order" id="orderLabel"></div>
+    </div>
+    <div class="toggles">
+      <button class="toggle-chip on" id="hintToggle">도움 표시</button>
+      <button class="toggle-chip" id="logToggle">로그</button>
+      <button class="btn small secondary" id="giveupBtn">설정으로</button>
+    </div>
+  </div>
+
+  <div class="scoreboard" id="scoreboard"></div>
+
+  <div class="pool-wrap">
+    <h3 id="poolTitle">공용 풀</h3>
+    <div class="pool" id="pool"></div>
+    <div class="bagline" id="bagLine"></div>
+  </div>
+
+  <div class="maingrid">
+    <div class="mainboard-area card">
+      <div class="who" id="whoLabel"></div>
+      <div class="board big" id="board"></div>
+      <div class="linehints" id="linehints"></div>
+      <div class="message" id="message"></div>
+      <div class="flagcard">
+        <h4>태극기 카드</h4>
+        <div class="pieces" id="pieces"></div>
+        <div class="flagcount" id="flagcount"></div>
+      </div>
+    </div>
+
+    <div class="others" id="others"></div>
+  </div>
+
+  <div class="logpanel card hidden" id="logPanel">
+    <div class="lh"><h3 style="margin:0;font-size:13px;color:var(--ink-dim);">진행 기록</h3></div>
+    <div class="logbox" id="logbox"></div>
+  </div>
+</div>
+
+<div id="screen-result">
+  <div class="card">
+    <h2 id="resultLead"></h2>
+    <table class="result" id="resultTable"></table>
+    <div class="row" style="margin-top:14px;">
+      <button class="btn" id="againBtn">같은 설정으로 다시</button>
+      <button class="btn secondary" id="newBtn">새 설정</button>
+      <button class="btn secondary" id="copyResultBtn">결과 복사</button>
+      <button class="btn secondary" id="saveJsonBtn">JSON 저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="handoff">
+  <h2 id="handoffName"></h2>
+  <p>기기를 건네주세요.</p>
+  <button class="btn" id="handoffStart">내 차례 시작</button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function (root) {
+  'use strict';
+
+  var COLORS = ['black', 'white', 'red', 'blue'];
+  var ROWS = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+  var COLS = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
+  var PIECE_KEYS = ['taegeuk', 'geon', 'ri', 'gam', 'gon'];
+  var VALUE_TO_PIECE = { 2: 'taegeuk', 3: 'geon', 4: 'ri', 5: 'gam', 6: 'gon' };
+  var TIEBREAK = { same: 0.03, consec: 0.02, color: 0.01 };
+  var CONSEC_SETS = [[2, 3, 4], [3, 4, 5], [4, 5, 6]].map(function (a) { return a.join(','); });
+
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function linesAt(cell) {
+    var r = Math.floor(cell / 3), c = cell % 3;
+    return [ROWS[r], COLS[c]];
+  }
+  function pieceIdForValue(v) { return VALUE_TO_PIECE[v] || null; }
+  function rewardCount(type) {
+    if (type === 'same') return 2;
+    if (type === 'consec') return 2;
+    if (type === 'color') return 1;
+    return 0;
+  }
+  function comboType(board, line) {
+    var d0 = board[line[0]], d1 = board[line[1]], d2 = board[line[2]];
+    if (!d0 || !d1 || !d2) return null;
+    if (d0.value === 1 || d1.value === 1 || d2.value === 1) return null;
+    var vals = [d0.value, d1.value, d2.value];
+    var cols = [d0.color, d1.color, d2.color];
+    var uv = Array.from(new Set(vals));
+    var uc = Array.from(new Set(cols));
+    if (uv.length === 1 && uc.length === 3) return 'same';
+    if (uc.length === 1 && uv.length === 3) {
+      var s = vals.slice().sort(function (a, b) { return a - b; });
+      var key = s.join(',');
+      if (CONSEC_SETS.indexOf(key) >= 0) return 'consec';
+      return 'color';
+    }
+    return null;
+  }
+  function isFull(board, line) {
+    return board[line[0]] != null && board[line[1]] != null && board[line[2]] != null;
+  }
+  function hasNonEye(board, line) {
+    return line.some(function (i) { return board[i] && board[i].value !== 1; });
+  }
+  function validCells(board) {
+    var empty = [], nonEye = [];
+    for (var i = 0; i < 9; i++) {
+      if (!board[i]) empty.push(i);
+      else if (board[i].value !== 1) nonEye.push(i);
+    }
+    if (empty.length === 9) return empty;
+    if (nonEye.length === 0) return empty;
+    var adj = function (i) {
+      var r = Math.floor(i / 3), c = i % 3, out = [];
+      if (r > 0) out.push(i - 3);
+      if (r < 2) out.push(i + 3);
+      if (c > 0) out.push(i - 1);
+      if (c < 2) out.push(i + 1);
+      return out;
+    };
+    var anchorSet = {};
+    nonEye.forEach(function (a) { adj(a).forEach(function (n) { anchorSet[n] = true; }); });
+    return empty.filter(function (i) { return anchorSet[i]; });
+  }
+
+  function makePlayer(id, type, name) {
+    return {
+      id: id, name: name, type: type,
+      board: new Array(9).fill(null),
+      parts: { taegeuk: 0, geon: 0, ri: 0, gam: 0, gon: 0 },
+      score: 0, arrival: 0, firstFlagRound: null, scoreHistory: [0],
+      stats: {
+        same: 0, consec: 0, color: 0, cross: 0,
+        scatterLines: 0, scatterDice: 0, blocked: 0,
+        eyesTaken: 0, eyesRemoved: 0, forcedScatter: 0,
+        sourceSame: 0, sourceConsec: 0, sourceColor: 0, placements: 0
+      }
+    };
+  }
+  function flagsOf(p) { return Math.min(p.parts.taegeuk, p.parts.geon, p.parts.ri, p.parts.gam, p.parts.gon); }
+  function pieceTotal(p) { return p.parts.taegeuk + p.parts.geon + p.parts.ri + p.parts.gam + p.parts.gon; }
+  function scoreOf(p) { return pieceTotal(p) + flagsOf(p); }
+
+  function newBag() { var b = {}; COLORS.forEach(function (c) { b[c] = 16; }); return b; }
+  function bagTotal(bag) { return COLORS.reduce(function (s, c) { return s + bag[c]; }, 0); }
+  function drawFromBag(bag, n, rng) {
+    var take = Math.min(n, bagTotal(bag));
+    var shortage = take < n;
+    var colors = [];
+    for (var k = 0; k < take; k++) {
+      var tot = bagTotal(bag);
+      var r = rng() * tot;
+      var cum = 0, chosen = COLORS[COLORS.length - 1];
+      for (var ci = 0; ci < COLORS.length; ci++) {
+        cum += bag[COLORS[ci]];
+        if (r < cum) { chosen = COLORS[ci]; break; }
+      }
+      bag[chosen]--; colors.push(chosen);
+    }
+    return { colors: colors, shortage: shortage };
+  }
+
+  function create(settings) {
+    var rng = mulberry32(settings.seed);
+    var n = settings.n;
+    var players = [];
+    for (var i = 0; i < n; i++) {
+      players.push(makePlayer(i, settings.types[i], settings.types[i] === 'human' ? ('플레이어 ' + (i + 1)) : ('AI-' + (i + 1))));
+    }
+    return {
+      settings: settings, rng: rng,
+      bag: newBag(), pool: [], order: [], orderAt: 0,
+      round: 0, placementsThisTurn: 0,
+      players: players, arrivalCounter: 0,
+      events: [], eventId: 0,
+      phase: 'idle', pending: null,
+      r4Snapshot: null, leaderHistory: [], done: false
+    };
+  }
+
+  function emit(g, type, data, summary) {
+    var e = { id: ++g.eventId, type: type, round: g.round, player: current(g) ? current(g).name : null, data: data, summary: summary };
+    g.events.push(e);
+    return e;
+  }
+  function current(g) { return g.players[g.order[g.orderAt]]; }
+  function snapshotBoard(p) { return p.board.map(function (d) { return d ? (d.color[0] + d.value) : '.'; }).join(','); }
+
+  function startRound(g) {
+    if (g.round >= 8) { return endGame(g); }
+    g.round++;
+    g.order = g.players.slice().sort(function (a, b) {
+      if (a.score !== b.score) return a.score - b.score;
+      if (a.arrival !== b.arrival) return b.arrival - a.arrival;
+      return g.rng() - 0.5;
+    }).map(function (p) { return p.id; });
+    g.orderAt = 0;
+    var need = g.settings.n * 2 + 2;
+    var drawn = drawFromBag(g.bag, need, g.rng);
+    if (drawn.shortage) g._shortage = (g._shortage || 0) + 1;
+    g.pool = drawn.colors.map(function (c) { return { color: c, value: 1 + Math.floor(g.rng() * 6) }; });
+    var poolColorCount = {}; COLORS.forEach(function (c) { poolColorCount[c] = 0; });
+    g.pool.forEach(function (d) { poolColorCount[d.color]++; });
+    if (COLORS.some(function (c) { return poolColorCount[c] === 0; })) g._zeroColorRounds = (g._zeroColorRounds || 0) + 1;
+    emit(g, 'round_start', { order: g.order.slice() },
+      'R' + g.round + ' · 순서 ' + g.order.map(function (id) { var p = g.players[id]; return p.name + '(' + p.score + '점)'; }).join(' → '));
+    beginTurn(g);
+  }
+
+  function beginTurn(g) { g.placementsThisTurn = 0; g.phase = 'idle'; prepareStep(g); }
+
+  function prepareStep(g) {
+    var p = current(g);
+    var cells = validCells(p.board);
+    if (cells.length === 0 || g.pool.length === 0) {
+      g.phase = 'blocked_pool';
+      emit(g, 'blocked', {}, 'R' + g.round + ' · ' + p.name + ' · 배치 ' + (g.placementsThisTurn + 1) + '/2 불가 · 놓을 곳 없음');
+      return;
+    }
+    g.phase = 'place';
+  }
+
+  function analyzeMoves(g, board, pool) {
+    var cells = validCells(board);
+    var moves = []; var anyFree = false;
+    for (var pi = 0; pi < pool.length; pi++) {
+      var die = pool[pi];
+      for (var ci = 0; ci < cells.length; ci++) {
+        var cell = cells[ci];
+        var old = board[cell];
+        board[cell] = die;
+        var lines = linesAt(cell);
+        var results = lines.map(function (line) {
+          if (!isFull(board, line)) return null;
+          return { line: line, type: comboType(board, line) };
+        });
+        var combos = results.filter(function (r) { return r && r.type; });
+        var scatterFlag = results.some(function (r) { return r && !r.type && hasNonEye(board, r.line); });
+        var tier, value;
+        if (combos.length === 2) {
+          tier = 3; value = combos.reduce(function (s, c) { return s + rewardCount(c.type) + TIEBREAK[c.type]; }, 0);
+        } else if (combos.length === 1) {
+          tier = 2; value = rewardCount(combos[0].type) + TIEBREAK[combos[0].type];
+        } else {
+          tier = 1; value = buildHeuristic(board, cell, die);
+          if (scatterFlag) value -= 30;
+        }
+        board[cell] = old;
+        if (!scatterFlag) anyFree = true;
+        moves.push({ pi: pi, cell: cell, tier: tier, value: value, scatterFlag: scatterFlag });
+      }
+    }
+    return { moves: moves, anyFree: anyFree };
+  }
+
+  function buildHeuristic(board, cell, die) {
+    var lines = linesAt(cell); var score = 0;
+    lines.forEach(function (line) {
+      var existing = line.filter(function (i) { return i !== cell && board[i]; }).map(function (i) { return board[i]; });
+      if (existing.length === 0) return;
+      var has1 = existing.some(function (d) { return d.value === 1; });
+      if (die.value === 1) {
+        if (has1) { score += -2; return; }
+        var colorsE = new Set(existing.map(function (d) { return d.color; }));
+        var valsE = new Set(existing.map(function (d) { return d.value; }));
+        var potential = (valsE.size === 1 ? 1 : 0) + (colorsE.size === 1 ? 1 : 0);
+        score += -8 - 4 * potential * existing.length;
+        return;
+      }
+      if (has1) { score += -3; return; }
+      var compatSame = existing.every(function (d) { return d.value === die.value; });
+      var colorsMatch = existing.every(function (d) { return d.color === die.color; });
+      var valsE2 = existing.map(function (d) { return d.value; });
+      var trackScore = 0, compatTrack = false;
+      if (colorsMatch) {
+        var distinct = valsE2.indexOf(die.value) < 0;
+        compatTrack = distinct;
+        var inWindow = false;
+        if (existing.length === 2) {
+          var cand = valsE2.concat([die.value]).sort(function (a, b) { return a - b; }).join(',');
+          inWindow = CONSEC_SETS.indexOf(cand) >= 0;
+        } else if (existing.length === 1) {
+          inWindow = CONSEC_SETS.some(function (s) {
+            var arr = s.split(',').map(Number);
+            return arr.indexOf(die.value) >= 0 && arr.indexOf(valsE2[0]) >= 0;
+          });
+        }
+        trackScore = inWindow ? (3 * existing.length + 1) : (distinct ? 3 * existing.length : 0);
+      }
+      if (compatSame && compatTrack) score += Math.max(2 * existing.length + 1, trackScore);
+      else if (compatSame) score += 2 * existing.length + 1;
+      else if (compatTrack) score += trackScore;
+      else score += -6;
+    });
+    return score;
+  }
+
+  function wouldScatter(board, cell, die) {
+    var old = board[cell]; board[cell] = die;
+    var lines = linesAt(cell);
+    var yes = lines.some(function (line) { return isFull(board, line) && !comboType(board, line) && hasNonEye(board, line); });
+    board[cell] = old;
+    return yes;
+  }
+
+  function dieLabel(d) {
+    var names = { black: '검정', white: '흰색', red: '빨강', blue: '파랑' };
+    return names[d.color] + ' ' + (d.value === 1 ? '◉' : d.value);
+  }
+  var TYPE_NAME = { same: '같은 눈', consec: '연속', color: '같은 색' };
+  var PIECE_NAME = { taegeuk: '태극', geon: '건', ri: '리', gam: '감', gon: '곤' };
+
+  function place(g, pi, cell) {
+    var p = current(g);
+    var valid = validCells(p.board);
+    if (valid.indexOf(cell) < 0 || !g.pool[pi]) return false;
+    var die = g.pool.splice(pi, 1)[0];
+    p.board[cell] = die;
+    p.stats.placements++;
+    if (die.value === 1) p.stats.eyesTaken++;
+    var lines = linesAt(cell);
+    var found = lines.map(function (line) {
+      if (!isFull(p.board, line)) return null;
+      var type = comboType(p.board, line);
+      if (!type) return null;
+      return { line: line, type: type, values: line.map(function (i) { return p.board[i].value; }) };
+    }).filter(Boolean);
+    g.pending = { placedCell: cell, combos: found, comboIndex: 0, combo: null, rewardIndex: 0, rewardTotal: 0, scoreBefore: p.score };
+    emit(g, 'placement', { die: die, cell: cell },
+      'R' + g.round + ' · ' + p.name + ' · ' + dieLabel(die) + ' → (' + (Math.floor(cell / 3) + 1) + ',' + (cell % 3 + 1) + ')');
+    if (found.length === 0) return finalizePlacement(g);
+    if (found.length === 2) return prepareCross(g);
+    beginCombo(g, found[0], false);
+    return true;
+  }
+
+  function prepareCross(g) {
+    var p = current(g);
+    var placed = g.pending.placedCell;
+    var removedCells = Array.from(new Set(g.pending.combos.reduce(function (a, c) { return a.concat(c.line); }, [])))
+      .filter(function (i) { return i !== placed; });
+    removedCells.forEach(function (i) { g.bag[p.board[i].color]++; p.board[i] = null; });
+    p.stats.cross++;
+    emit(g, 'cross', {}, '└ 교차 완성');
+    if (p.type === 'human') { g.phase = 'combo_order'; }
+    else {
+      g.pending.combos.sort(function (a, b) { return rewardCount(b.type) - rewardCount(a.type); });
+      beginCombo(g, g.pending.combos[0], true);
+    }
+  }
+
+  function chooseComboOrder(g, idx) {
+    if (g.phase !== 'combo_order') return false;
+    var c = g.pending.combos.splice(idx, 1)[0];
+    g.pending.combos.unshift(c);
+    g.pending.comboIndex = 0;
+    beginCombo(g, c, true);
+    return true;
+  }
+
+  function beginCombo(g, c, skipKeep) {
+    var p = current(g);
+    g.pending.combo = c;
+    g.pending.rewardIndex = 0;
+    g.pending.rewardTotal = rewardCount(c.type);
+    g.pending.rewardValueOptions = null;
+    p.stats[c.type]++;
+    if (skipKeep) { afterKeep(g); return; }
+    g.phase = 'combo_keep';
+  }
+
+  function perpLineOf(cell, line) { var ls = linesAt(cell); return ls[0] === line ? ls[1] : ls[0]; }
+  function perpendicularPotential(board, cell, die, excludeLine) {
+    var score = 0;
+    linesAt(cell).forEach(function (line) {
+      if (line === excludeLine) return;
+      var others = line.filter(function (i) { return i !== cell && board[i]; }).map(function (i) { return board[i]; });
+      if (others.length === 0) return;
+      if (others.some(function (d) { return d.value === 1; })) return;
+      if (others.every(function (d) { return d.value === die.value; })) score += 2 * others.length;
+      var pipsO = {}; others.forEach(function (d) { pipsO[d.value] = true; });
+      if (others.every(function (d) { return d.color === die.color; })) { if (!pipsO[die.value]) score += 2 * others.length; }
+    });
+    return score;
+  }
+  function aiChooseKeep(g) {
+    var p = current(g); var line = g.pending.combo.line;
+    var best = [], bestKey = null;
+    line.forEach(function (cell) {
+      var die = p.board[cell];
+      var pl = perpLineOf(cell, line);
+      var othersFull = pl.every(function (i) { return i === cell || p.board[i]; });
+      var penalty = othersFull ? -100 : 0;
+      var key = penalty + perpendicularPotential(p.board, cell, die, line);
+      if (bestKey === null || key > bestKey) { bestKey = key; best = [cell]; }
+      else if (key === bestKey) best.push(cell);
+    });
+    return best[Math.floor(g.rng() * best.length)];
+  }
+
+  function chooseKeep(g, cell) {
+    if (g.phase !== 'combo_keep') return false;
+    var p = current(g); var line = g.pending.combo.line;
+    if (line.indexOf(cell) < 0 || !p.board[cell]) return false;
+    line.forEach(function (i) { if (i !== cell) { g.bag[p.board[i].color]++; p.board[i] = null; } });
+    emit(g, 'keep', { cell: cell }, '└ 남김: ' + dieLabel(p.board[cell]));
+    afterKeep(g);
+    return true;
+  }
+
+  function afterKeep(g) {
+    var p = current(g);
+    if (g.pending.combo.type === 'same') {
+      var eyes = [];
+      for (var i = 0; i < 9; i++) if (p.board[i] && p.board[i].value === 1) eyes.push(i);
+      if (eyes.length === 0) { beginRewards(g); return; }
+      if (eyes.length === 1) { chooseComboEye(g, eyes[0]); return; }
+      g.phase = 'combo_eye'; g.pending.eyeOptions = eyes; return;
+    }
+    beginRewards(g);
+  }
+
+  function aiChooseEye(g, eyes) {
+    var p = current(g);
+    var best = [], bestScore = null;
+    eyes.forEach(function (cell) {
+      var s = 0;
+      linesAt(cell).forEach(function (line) {
+        var others = line.filter(function (i) { return i !== cell && p.board[i] && p.board[i].value !== 1; }).map(function (i) { return p.board[i]; });
+        if (others.length === 2) {
+          var d1 = others[0], d2 = others[1];
+          if (d1.value === d2.value || d1.color === d2.color) { s += 2; return; }
+        }
+        s += others.length;
+      });
+      if (bestScore === null || s > bestScore) { bestScore = s; best = [cell]; }
+      else if (s === bestScore) best.push(cell);
+    });
+    return best[Math.floor(g.rng() * best.length)];
+  }
+
+  function chooseComboEye(g, cell) {
+    var p = current(g);
+    if (!p.board[cell] || p.board[cell].value !== 1) return false;
+    g.bag[p.board[cell].color]++; p.board[cell] = null;
+    p.stats.eyesRemoved++;
+    emit(g, 'eye_removed', { cell: cell }, '└ 감시의 눈 제거 (같은 눈 조합)');
+    beginRewards(g);
+    return true;
+  }
+
+  function beginRewards(g) {
+    var c = g.pending.combo;
+    if (g.pending.rewardIndex >= g.pending.rewardTotal) { return finishCombo(g); }
+    if (c.type !== 'same' && !g.pending.rewardValueOptions) g.pending.rewardValueOptions = Array.from(new Set(c.values));
+    var lineOpts = c.type === 'same' ? [] : g.pending.rewardValueOptions.map(pieceIdForValue);
+    // 연속: 첫 번째는 세 눈 중에서, 두 번째는 원하는 조각 (룰북 v0.9.3)
+    if (c.type === 'same') g.pending.rewardOptions = PIECE_KEYS.slice();
+    else if (c.type === 'consec') g.pending.rewardOptions = (g.pending.rewardIndex === 0) ? lineOpts : PIECE_KEYS.slice();
+    else g.pending.rewardOptions = lineOpts;
+    g.pending.rewardFree = (g.pending.rewardOptions.length === PIECE_KEYS.length && (c.type === 'same' || (c.type === 'consec' && g.pending.rewardIndex === 1)));
+    if (g.pending.rewardOptions.length === 1) { chooseReward(g, g.pending.rewardOptions[0]); return; }
+    g.phase = 'combo_reward';
+  }
+  function aiChooseReward(g) {
+    var p = current(g); var opts = g.pending.rewardOptions;
+    var min = Math.min.apply(null, opts.map(function (k) { return p.parts[k]; }));
+    var pool = opts.filter(function (k) { return p.parts[k] === min; });
+    return pool[Math.floor(g.rng() * pool.length)];
+  }
+  function chooseReward(g, key) {
+    if (!g.pending || !g.pending.rewardOptions || g.pending.rewardOptions.indexOf(key) < 0) return false;
+    var p = current(g); var c = g.pending.combo;
+    p.parts[key]++;
+    p.stats['source' + (c.type === 'same' ? 'Same' : c.type === 'consec' ? 'Consec' : 'Color')]++;
+    g.pending.rewardIndex++;
+    emit(g, 'reward', { key: key }, '└ 조각 ' + g.pending.rewardIndex + '/' + g.pending.rewardTotal + ': ' + PIECE_NAME[key]);
+    beginRewards(g);
+    return true;
+  }
+
+  function finishCombo(g) {
+    g.pending.comboIndex++;
+    if (g.pending.comboIndex < g.pending.combos.length) { beginCombo(g, g.pending.combos[g.pending.comboIndex], true); return; }
+    finalizePlacement(g);
+  }
+
+  function finalizePlacement(g) {
+    var p = current(g); var cell = g.pending.placedCell;
+    linesAt(cell).forEach(function (line) {
+      if (isFull(p.board, line) && !comboType(p.board, line)) {
+        var removed = [];
+        line.forEach(function (i) { if (p.board[i] && p.board[i].value !== 1) removed.push(i); });
+        if (removed.length > 0) {
+          removed.forEach(function (i) { g.bag[p.board[i].color]++; p.board[i] = null; });
+          p.stats.scatterLines++; p.stats.scatterDice += removed.length;
+          emit(g, 'scatter', { line: line }, '└ 흩어짐 · ' + removed.length + '개 반환');
+        }
+      }
+    });
+    updateScore(g, p);
+    g.pending = null; g.placementsThisTurn++;
+    advance(g);
+  }
+
+  function updateScore(g, p) {
+    var before = p.score, beforeFlags = flagsOf(p);
+    var after = scoreOf(p), afterFlags = flagsOf(p);
+    if (after !== before) {
+      g.arrivalCounter++; p.arrival = g.arrivalCounter; p.score = after;
+      p.scoreHistory[g.round] = after;
+      if (afterFlags > beforeFlags && p.firstFlagRound == null) p.firstFlagRound = g.round;
+      emit(g, 'score', { before: before, after: after }, '└ 점수 ' + before + ' → ' + after);
+    }
+  }
+
+  function resolveBlockedPool(g, pi) {
+    var p = current(g);
+    var die = g.pool.splice(pi, 1)[0];
+    g.bag[die.color]++; p.stats.blocked++;
+    emit(g, 'blocked_return', { die: die }, '└ 공용 풀 ' + dieLabel(die) + ' 반환');
+    var eyes = [];
+    for (var i = 0; i < 9; i++) if (p.board[i] && p.board[i].value === 1) eyes.push(i);
+    if (eyes.length === 0) { finishBlocked(g); return; }
+    if (eyes.length === 1) { removeBlockedEye(g, eyes[0]); return; }
+    g.phase = 'blocked_eye'; g.pending = { eyeOptions: eyes };
+  }
+  function removeBlockedEye(g, cell) {
+    var p = current(g);
+    if (!p.board[cell] || p.board[cell].value !== 1) return false;
+    g.bag[p.board[cell].color]++; p.board[cell] = null; p.stats.eyesRemoved++;
+    emit(g, 'blocked_eye_return', { cell: cell }, '└ 판의 감시의 눈 제거');
+    finishBlocked(g); return true;
+  }
+  function finishBlocked(g) { g.pending = null; g.placementsThisTurn++; advance(g); }
+
+  function advance(g) {
+    if (g.placementsThisTurn >= 2 || g.pool.length === 0) {
+      g.orderAt++;
+      if (g.orderAt >= g.order.length) { endRound(g); return; }
+      beginTurn(g);
+    } else { prepareStep(g); }
+  }
+
+  function endRound(g) {
+    var returned = g.pool.slice();
+    returned.forEach(function (d) { g.bag[d.color]++; });
+    g.pool = [];
+    var scores = g.players.map(function (p) { return { name: p.name, score: p.score }; });
+    var mx = Math.max.apply(null, g.players.map(function (p) { return p.score; }));
+    var leaders = g.players.filter(function (p) { return p.score === mx; });
+    g.leaderHistory.push(leaders.length === 1 ? leaders[0].id : null);
+    if (g.round === 4) g.r4Snapshot = g.players.map(function (p) { return { id: p.id, score: p.score }; });
+    emit(g, 'round_end', { scores: scores }, 'R' + g.round + ' 종료');
+    startRound(g);
+  }
+
+  function endGame(g) {
+    g.done = true; g.phase = 'end';
+    var mx = Math.max.apply(null, g.players.map(function (p) { return p.score; }));
+    var tied = g.players.filter(function (p) { return p.score === mx; });
+    tied.sort(function (a, b) { return a.arrival - b.arrival; });
+    g.winnerId = tied[0].id; g.rawTie = tied.length > 1;
+    var changes = 0, prev = null;
+    g.leaderHistory.forEach(function (l) { if (l != null) { if (prev != null && l !== prev) changes++; prev = l; } });
+    g.leaderChanges = changes;
+    emit(g, 'game_end', {}, '게임 종료 · 승자 ' + g.players[g.winnerId].name);
+  }
+
+  function aiAct(g) {
+    var p = current(g);
+    if (p.type !== 'ai') return false;
+    if (g.phase === 'blocked_pool') {
+      var idx1 = g.pool.findIndex(function (d) { return d.value === 1; });
+      var pi = idx1 >= 0 ? idx1 : Math.floor(g.rng() * g.pool.length);
+      resolveBlockedPool(g, pi);
+      if (g.phase === 'blocked_eye') removeBlockedEye(g, aiChooseEye(g, g.pending.eyeOptions));
+      return true;
+    }
+    if (g.phase === 'place') {
+      var an = analyzeMoves(g, p.board, g.pool);
+      if (an.moves.length && !an.anyFree) p.stats.forcedScatter++;
+      var bestList = [an.moves[0]], bestTier = an.moves[0].tier, bestVal = an.moves[0].value;
+      an.moves.forEach(function (m) {
+        if (m.tier > bestTier || (m.tier === bestTier && m.value > bestVal)) { bestTier = m.tier; bestVal = m.value; bestList = [m]; }
+        else if (m.tier === bestTier && m.value === bestVal) bestList.push(m);
+      });
+      var best = bestList[Math.floor(g.rng() * bestList.length)];
+      place(g, best.pi, best.cell);
+      return true;
+    }
+    if (g.phase === 'combo_order') { chooseComboOrder(g, 0); return true; }
+    if (g.phase === 'combo_keep') { chooseKeep(g, aiChooseKeep(g)); return true; }
+    if (g.phase === 'combo_eye') { chooseComboEye(g, aiChooseEye(g, g.pending.eyeOptions)); return true; }
+    if (g.phase === 'combo_reward') { chooseReward(g, aiChooseReward(g)); return true; }
+    if (g.phase === 'blocked_eye') { removeBlockedEye(g, aiChooseEye(g, g.pending.eyeOptions)); return true; }
+    return false;
+  }
+
+  function runFullAI(g, maxSteps) {
+    var steps = maxSteps || 200000;
+    while (!g.done && steps-- > 0) {
+      if (g.phase === 'idle') { prepareStep(g); continue; }
+      if (!aiAct(g)) break;
+    }
+    return g;
+  }
+  function startGame(settings) { var g = create(settings); startRound(g); return g; }
+  function finalStats(g) {
+    return g.players.map(function (p) {
+      return { id: p.id, name: p.name, score: p.score, arrival: p.arrival, parts: Object.assign({}, p.parts),
+        pieces: pieceTotal(p), flags: flagsOf(p), firstFlagRound: p.firstFlagRound, stats: Object.assign({}, p.stats) };
+    });
+  }
+
+  var Engine = {
+    COLORS: COLORS, PIECE_KEYS: PIECE_KEYS, TYPE_NAME: TYPE_NAME, PIECE_NAME: PIECE_NAME,
+    mulberry32: mulberry32, linesAt: linesAt, validCells: validCells, comboType: comboType,
+    wouldScatter: wouldScatter, rewardCount: rewardCount, pieceIdForValue: pieceIdForValue,
+    flagsOf: flagsOf, pieceTotal: pieceTotal, scoreOf: scoreOf,
+    create: create, startRound: startRound, place: place, chooseComboOrder: chooseComboOrder,
+    chooseKeep: chooseKeep, chooseComboEye: chooseComboEye, chooseReward: chooseReward,
+    resolveBlockedPool: resolveBlockedPool, removeBlockedEye: removeBlockedEye,
+    current: current, analyzeMoves: analyzeMoves, aiAct: aiAct, runFullAI: runFullAI,
+    startGame: startGame, finalStats: finalStats, dieLabel: dieLabel, snapshotBoard: snapshotBoard
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
+  else root.TG_ENGINE = Engine;
+})(typeof window !== 'undefined' ? window : this);
+</script>
+
+<script>
+(function(){
+  'use strict';
+  var Engine = window.TG_ENGINE;
+  var $ = function(s){ return document.querySelector(s); };
+  var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+  var STATE = { g: null, selectedPool: null, speed: 600, showHints: true, showLog: false,
+                timer: null, handoffPendingFor: null, multiHuman: false, lastSeatKey: null };
+
+  var COLOR_LABEL = {black:'검정',white:'흰색',red:'빨강',blue:'파랑'};
+  var COLOR_MARK = {black:'■',white:'□',red:'▲',blue:'●'};
+
+  function toast(t){ var el=$('#toast'); el.textContent=t; el.classList.add('show'); setTimeout(function(){el.classList.remove('show');},1600); }
+
+  function buildSeatList(){
+    var n = +$('#setN').value;
+    var wrap = $('#seatlist'); wrap.innerHTML='';
+    for (var i=0;i<n;i++){
+      var d = document.createElement('div'); d.className='seat';
+      d.innerHTML = '<span class="name">'+(i+1)+'번</span><select data-seat="'+i+'">'+
+        '<option value="human"'+(i===0?' selected':'')+'>사람</option>'+
+        '<option value="ai"'+(i>0?' selected':'')+'>AI</option></select>';
+      wrap.appendChild(d);
+    }
+  }
+  $('#setN').addEventListener('change', buildSeatList);
+  buildSeatList();
+
+  function readSettings(){
+    var n = +$('#setN').value;
+    var types = $$('#seatlist select').slice(0,n).map(function(s){return s.value;});
+    var seedRaw = $('#setSeed').value;
+    var seed = seedRaw ? (+seedRaw >>> 0) : (Math.floor(Math.random()*4294967295) >>> 0);
+    return { n:n, types:types, seed:seed, speed:+$('#setSpeed').value };
+  }
+
+  $('#startBtn').addEventListener('click', function(){
+    var settings = readSettings();
+    STATE.speed = settings.speed;
+    STATE.multiHuman = settings.types.filter(function(t){return t==='human';}).length >= 2;
+    STATE.g = Engine.startGame(settings);
+    STATE.selectedPool = null;
+    STATE.handoffPendingFor = null; STATE.lastSeatKey = null;
+    show('game');
+    driveTurn();
+  });
+
+  function show(which){
+    $('#screen-setup').style.display = which==='setup' ? 'block':'none';
+    $('#screen-game').style.display = which==='game' ? 'block':'none';
+    $('#screen-result').style.display = which==='result' ? 'block':'none';
+    $('#handoff').classList.add('hidden');
+  }
+  $('#giveupBtn').addEventListener('click', function(){ clearTimeout(STATE.timer); show('setup'); });
+  $('#newBtn').addEventListener('click', function(){ show('setup'); });
+  $('#againBtn').addEventListener('click', function(){
+    var settings = STATE.g.settings;
+    STATE.multiHuman = settings.types.filter(function(t){return t==='human';}).length >= 2;
+    STATE.g = Engine.startGame(settings);
+    STATE.selectedPool=null; STATE.handoffPendingFor=null; STATE.lastSeatKey=null;
+    show('game'); driveTurn();
+  });
+
+  function driveTurn(){
+    var g = STATE.g;
+    if (!g) return;
+    if (g.done){ renderResult(); show('result'); return; }
+    var p = Engine.current(g);
+    var key = g.round+':'+g.orderAt+':'+p.id;
+    if (p.type==='human' && STATE.multiHuman && g.placementsThisTurn===0 && STATE.handoffPendingFor!==key && STATE.lastSeatKey!==key){
+      STATE.handoffPendingFor = key;
+      $('#handoffName').textContent = p.name+' 차례입니다';
+      $('#handoff').classList.remove('hidden');
+      return;
+    }
+    render();
+    if (p.type==='ai'){
+      clearTimeout(STATE.timer);
+      STATE.timer = setTimeout(function(){
+        Engine.aiAct(g);
+        driveTurn();
+      }, STATE.speed);
+    }
+  }
+  $('#handoffStart').addEventListener('click', function(){
+    STATE.lastSeatKey = STATE.handoffPendingFor;
+    STATE.handoffPendingFor = null;
+    $('#handoff').classList.add('hidden');
+    driveTurn();
+  });
+
+  function afterHumanAction(){ driveTurn(); }
+
+  function neededForLine(board, line){
+    var empties = line.filter(function(i){return !board[i];});
+    if (empties.length !== 1) return null;
+    var cell = empties[0];
+    var need = [];
+    Engine.COLORS.forEach(function(color){
+      for (var v=2; v<=6; v++){
+        var testBoard = board.slice(); testBoard[cell] = {color:color, value:v};
+        var t = Engine.comboType(testBoard, line);
+        if (t) need.push({color:color, value:v, type:t});
+      }
+    });
+    return need;
+  }
+  function lineState(board, line){
+    if (line.some(function(i){return board[i] && board[i].value===1;})) return 'eye';
+    var filled = line.filter(function(i){return board[i];}).length;
+    if (filled < 2) return 'open';
+    var need = neededForLine(board, line);
+    if (need===null) return 'open';
+    return need.length>0 ? 'open':'dead';
+  }
+  var LINES_LABELED = [
+    {line:[0,1,2], name:'가로 1행'},{line:[3,4,5], name:'가로 2행'},{line:[6,7,8], name:'가로 3행'},
+    {line:[0,3,6], name:'세로 1열'},{line:[1,4,7], name:'세로 2열'},{line:[2,5,8], name:'세로 3열'}
+  ];
+
+  function render(){
+    var g = STATE.g; if(!g) return;
+    var p = Engine.current(g);
+    $('#roundLabel').textContent = '라운드 '+g.round+' / 8';
+    $('#orderLabel').textContent = '이번 라운드 순서 · '+g.order.map(function(id){return g.players[id].name;}).join(' → ');
+
+    renderScoreboard(g,p);
+    renderPool(g,p);
+    renderBoard(g,p);
+    renderPieces(g,p);
+    renderMessage(g,p);
+    renderOthers(g,p);
+    renderLog(g);
+  }
+
+  function renderScoreboard(g,p){
+    var sorted = g.players.slice().sort(function(a,b){
+      if (b.score!==a.score) return b.score-a.score;
+      return b.arrival-a.arrival;
+    });
+    $('#scoreboard').innerHTML = sorted.map(function(pl){
+      return '<div class="score-chip'+(pl.id===p.id?' active':'')+'">'+
+        '<div class="nm"><span>'+pl.name+'</span></div>'+
+        '<div class="sc">'+pl.score+'</div></div>';
+    }).join('');
+  }
+
+  function renderPool(g,p){
+    $('#poolTitle').textContent = '공용 풀 · '+p.name+' 차례 ('+(g.placementsThisTurn+1)+' / 2)';
+    var blocked = (g.phase==='blocked_pool');
+    $('#pool').innerHTML = g.pool.map(function(d,i){
+      var sel = (STATE.selectedPool===i) ? ' selected':'';
+      var dis = (p.type!=='human' || (g.phase!=='place' && !blocked)) ? ' disabled':'';
+      return '<button class="die '+d.color+sel+'" data-pool="'+i+'" '+dis+'>'+
+        '<span>'+(d.value===1?'◉':d.value)+'</span><em>'+COLOR_MARK[d.color]+'</em></button>';
+    }).join('');
+    var bag = g.bag;
+    $('#bagLine').textContent = '주머니 · '+Engine.COLORS.map(function(c){return COLOR_LABEL[c]+' '+bag[c];}).join(' · ');
+    $$('#pool [data-pool]').forEach(function(btn){
+      btn.addEventListener('click', function(){ onPoolClick(+btn.dataset.pool); });
+    });
+  }
+
+  function onPoolClick(pi){
+    var g = STATE.g, p = Engine.current(g);
+    if (p.type!=='human') return;
+    if (g.phase==='blocked_pool'){ Engine.resolveBlockedPool(g, pi); afterHumanAction(); return; }
+    if (g.phase!=='place') return;
+    STATE.selectedPool = (STATE.selectedPool===pi) ? null : pi;
+    render();
+  }
+
+  function renderBoard(g,p){
+    $('#whoLabel').textContent = p.name+'의 개인판'+(p.type==='ai'?' (AI)':'');
+    var valid = (g.phase==='place') ? Engine.validCells(p.board) : [];
+    var selDie = (STATE.selectedPool!=null) ? g.pool[STATE.selectedPool] : null;
+    var comboCells = (g.phase==='combo_keep') ? g.pending.combo.line :
+      (g.phase==='combo_eye' || g.phase==='blocked_eye') ? g.pending.eyeOptions : [];
+    $('#board').innerHTML = p.board.map(function(d,i){
+      var cls = 'cell';
+      if (p.type==='human' && g.phase==='place' && !d && valid.indexOf(i)>=0) cls+=' valid';
+      if (comboCells.indexOf(i)>=0) cls+=' choice';
+      if (p.type==='human' && g.phase==='place' && selDie && !d && valid.indexOf(i)>=0 && Engine.wouldScatter(p.board,i,selDie)) cls+=' warn';
+      var inner = d ? '<div class="die '+d.color+'"><span>'+(d.value===1?'◉':d.value)+'</span><em>'+COLOR_MARK[d.color]+'</em></div>' : '';
+      return '<button class="'+cls+'" data-cell="'+i+'">'+inner+'</button>';
+    }).join('');
+    $$('#board [data-cell]').forEach(function(btn){ btn.addEventListener('click', function(){ onCellClick(+btn.dataset.cell); }); });
+
+    if (STATE.showHints){
+      $('#linehints').innerHTML = LINES_LABELED.map(function(L){
+        var st = lineState(p.board, L.line);
+        var extra = '';
+        if (st==='open'){
+          var need = neededForLine(p.board, L.line);
+          if (need && need.length){
+            var chips = need.slice(0,4).map(function(n){return COLOR_LABEL[n.color]+' '+n.value;});
+            extra = ' 필요: '+chips.join('/')+(need.length>4?' 외':'');
+          }
+        }
+        var cls = 'linehint'+(st==='dead'?' dead':'')+(st==='eye'?' eye':'');
+        var text = st==='eye' ? (L.name+' · 감시의 눈') : st==='dead' ? (L.name+' · 이미 불가능') : (L.name+extra);
+        return '<span class="'+cls+'">'+text+'</span>';
+      }).join('');
+    } else { $('#linehints').innerHTML=''; }
+  }
+
+  function onCellClick(cell){
+    var g = STATE.g, p = Engine.current(g);
+    if (p.type!=='human') return;
+    if (g.phase==='place'){
+      if (STATE.selectedPool==null) { toast('먼저 주사위를 고르세요.'); return; }
+      var pi = STATE.selectedPool; STATE.selectedPool=null;
+      Engine.place(g, pi, cell);
+      afterHumanAction();
+    } else if (g.phase==='combo_keep'){
+      if (g.pending.combo.line.indexOf(cell)<0) return;
+      Engine.chooseKeep(g, cell); afterHumanAction();
+    } else if (g.phase==='combo_eye'){
+      if (g.pending.eyeOptions.indexOf(cell)<0) return;
+      Engine.chooseComboEye(g, cell); afterHumanAction();
+    } else if (g.phase==='blocked_eye'){
+      if (g.pending.eyeOptions.indexOf(cell)<0) return;
+      Engine.removeBlockedEye(g, cell); afterHumanAction();
+    }
+  }
+
+  function renderPieces(g,p){
+    var opts = (g.phase==='combo_reward') ? g.pending.rewardOptions : [];
+    $('#pieces').innerHTML = Engine.PIECE_KEYS.map(function(k){
+      var sel = (p.type==='human' && opts.indexOf(k)>=0);
+      return '<button class="piece'+(sel?' selectable':'')+'" data-piece="'+k+'" '+(sel?'':'disabled')+'>'+
+        '<span>'+Engine.PIECE_NAME[k]+'</span><b>'+p.parts[k]+'</b></button>';
+    }).join('');
+    $$('#pieces [data-piece]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (btn.disabled) return;
+        Engine.chooseReward(STATE.g, btn.dataset.piece); afterHumanAction();
+      });
+    });
+    $('#flagcount').textContent = '완성 '+Engine.flagsOf(p)+'장 · 조각 '+Engine.pieceTotal(p)+'개 · 점수 '+p.score;
+  }
+
+  function renderMessage(g,p){
+    var el = $('#message');
+    if (p.type!=='human'){ el.textContent = 'AI가 진행 중입니다…'; return; }
+    var msg = '', bar = '';
+    switch(g.phase){
+      case 'place': msg = STATE.selectedPool==null ? '공용 풀에서 주사위를 고르세요.' : '파랗게 표시된 칸에 놓으세요.'; break;
+      case 'blocked_pool': msg = '놓을 곳이 없습니다. 주머니로 돌려보낼 주사위를 고르세요.'; break;
+      case 'blocked_eye': msg = '판에서 치울 감시의 눈을 고르세요.'; break;
+      case 'combo_order':
+        msg = '먼저 처리할 조합을 고르세요.';
+        bar = '<div class="choicebar">'+g.pending.combos.map(function(c,i){
+          var L = LINES_LABELED.filter(function(x){return x.line.join()===c.line.join();})[0];
+          return '<button class="btn small secondary" data-order="'+i+'">'+(L?L.name:'')+' · '+Engine.TYPE_NAME[c.type]+'</button>';
+        }).join('')+'</div>';
+        break;
+      case 'combo_keep': msg = '판 위에서 빛나는 칸 중, 남길 주사위를 고르세요.'; break;
+      case 'combo_eye': msg = '판 위에서 치울 감시의 눈을 고르세요.'; break;
+      case 'combo_reward':
+        msg = '받을 조각을 고르세요. ('+(g.pending.rewardIndex+1)+' / '+g.pending.rewardTotal+') · '+Engine.TYPE_NAME[g.pending.combo.type]+' 조합 · '+
+          (g.pending.rewardFree ? '원하는 조각' : '세 주사위의 눈 중에서');
+        break;
+      default: msg='';
+    }
+    el.innerHTML = '<div>'+msg+'</div>'+bar;
+    $$('[data-order]').forEach(function(btn){
+      btn.addEventListener('click', function(){ Engine.chooseComboOrder(STATE.g, +btn.dataset.order); afterHumanAction(); });
+    });
+  }
+
+  function renderOthers(g,p){
+    var others = g.players.filter(function(x){return x.id!==p.id;});
+    $('#others').innerHTML = others.map(function(o){
+      var mini = o.board.map(function(d){
+        if(!d) return '<div class="minicell"></div>';
+        return '<div class="minicell '+d.color+'">'+(d.value===1?'◉':d.value)+'</div>';
+      }).join('');
+      var flags = Engine.PIECE_KEYS.map(function(k){return '<span>'+Engine.PIECE_NAME[k]+' '+o.parts[k]+'</span>';}).join('');
+      var hints = '';
+      if (STATE.showHints){
+        var chips=[];
+        LINES_LABELED.forEach(function(L){
+          var st = lineState(o.board, L.line);
+          if (st==='open'){
+            var need = neededForLine(o.board, L.line);
+            if (need && need.length && need.length<=6){
+              var uniq = Array.from(new Set(need.map(function(n){return COLOR_LABEL[n.color]+n.value;})));
+              chips.push('<em>'+L.name.replace('가로','가').replace('세로','세')+' '+uniq.slice(0,3).join('/')+'</em>');
+            }
+          }
+        });
+        if (chips.length) hints = '<div class="opphints">'+chips.join('')+'</div>';
+      }
+      return '<div class="opp">'+
+        '<header><b>'+o.name+'</b><span>'+o.score+'점 · 완성 '+Engine.flagsOf(o)+'장</span></header>'+
+        '<div class="miniboard">'+mini+'</div>'+
+        '<div class="oppflags">'+flags+'</div>'+hints+
+        '</div>';
+    }).join('');
+  }
+
+  function renderLog(g){
+    if (!STATE.showLog) return;
+    $('#logbox').innerHTML = g.events.slice().reverse().slice(0,80).map(function(e){
+      return '<div class="entry">'+e.summary+'</div>';
+    }).join('');
+  }
+
+  $('#hintToggle').addEventListener('click', function(){
+    STATE.showHints = !STATE.showHints;
+    $('#hintToggle').classList.toggle('on', STATE.showHints);
+    render();
+  });
+  $('#logToggle').addEventListener('click', function(){
+    STATE.showLog = !STATE.showLog;
+    $('#logToggle').classList.toggle('on', STATE.showLog);
+    $('#logPanel').classList.toggle('hidden', !STATE.showLog);
+    if (STATE.showLog) renderLog(STATE.g);
+  });
+
+  function ranking(g){
+    return g.players.slice().sort(function(a,b){ if(b.score!==a.score) return b.score-a.score; return a.arrival-b.arrival; });
+  }
+  function renderResult(){
+    var g = STATE.g; var rank = ranking(g); var w = g.players[g.winnerId];
+    $('#resultLead').textContent = w.name+' 승리 · '+w.score+'점'+(g.rawTie?' (동점, 먼저 도착)':'');
+    $('#resultTable').innerHTML = '<thead><tr><th>순위</th><th>플레이어</th><th>점수</th><th>같은눈/연속/같은색</th><th>흩어짐</th><th>완성</th></tr></thead><tbody>'+
+      rank.map(function(p,i){
+        return '<tr><td>'+(i+1)+'</td><td class="rankname">'+p.name+'</td><td>'+p.score+'</td>'+
+          '<td>'+p.stats.same+' / '+p.stats.consec+' / '+p.stats.color+'</td>'+
+          '<td>'+p.stats.scatterLines+'줄 ('+p.stats.scatterDice+'개)</td>'+
+          '<td>'+Engine.flagsOf(p)+'장</td></tr>';
+      }).join('')+'</tbody>';
+  }
+
+  $('#copyResultBtn').addEventListener('click', function(){
+    var g = STATE.g; var rank = ranking(g);
+    var lines = ['태극기 주사위 게임 결과', '설정: '+g.settings.n+'인 · 시드 '+g.settings.seed];
+    rank.forEach(function(p,i){
+      lines.push((i+1)+'위 '+p.name+': '+p.score+'점 / 조각 '+Engine.pieceTotal(p)+'개 / 완성 '+Engine.flagsOf(p)+'장 / 같은눈 '+p.stats.same+' 연속 '+p.stats.consec+' 같은색 '+p.stats.color+' / 흩어짐 '+p.stats.scatterLines+'줄');
+    });
+    copyText(lines.join('\n'));
+  });
+
+  function copyText(t){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){toast('복사했습니다.');}, function(){toast('복사할 수 없습니다.');});
+    } else toast('복사할 수 없습니다.');
+  }
+
+  function gameJSON(g){
+    return JSON.stringify({
+      version: 'tg-0.9.3', settings: g.settings,
+      players: g.players.map(function(p){
+        return {id:p.id, name:p.name, type:p.type, score:p.score, arrival:p.arrival, parts:p.parts,
+          flags: Engine.flagsOf(p), pieces: Engine.pieceTotal(p), stats:p.stats};
+      }),
+      winnerId: g.winnerId, rawTie: g.rawTie, leaderChanges: g.leaderChanges,
+      events: g.events.map(function(e){return {round:e.round, type:e.type, player:e.player, summary:e.summary};})
+    }, null, 2);
+  }
+
+  function saveFile(filename, text){
+    var p = (window.claude && window.claude.use) ? window.claude.use('downloads') : Promise.resolve(null);
+    p.then(function(downloads){
+      if (downloads){
+        return downloads.save({filename: filename, data: text}).then(function(){ toast('저장했습니다.'); });
+      }
+      throw new Error('no-downloads');
+    }).catch(function(){
+      try{
+        var blob = new Blob([text], {type:'application/json'});
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+        URL.revokeObjectURL(a.href);
+        toast('저장했습니다.');
+      }catch(e2){ toast('저장할 수 없습니다.'); }
+    });
+  }
+
+  $('#saveJsonBtn').addEventListener('click', function(){
+    var g = STATE.g;
+    saveFile('taegukgi_'+g.settings.n+'p_seed'+g.settings.seed+'.json', gameJSON(g));
+  });
+
+  var batchRows = [];
+  function runBatch(n, games, seedBase){
+    var acc = {pieces:0, same:0, consec:0, color:0, scatterLines:0, forced:0, flagsGE1:0, tie:0, topSum:0,
+      gapSum:0, changesSum:0, reversal:0};
+    var topScores = []; var pg=0;
+    for (var gi=0; gi<games; gi++){
+      var seed = (seedBase + gi*7919 + n*104729) >>> 0;
+      var settings = {n:n, types:new Array(n).fill('ai'), seed:seed, speed:0};
+      var g = Engine.startGame(settings);
+      Engine.runFullAI(g, 200000);
+      if (!g.done) continue;
+      var stats = Engine.finalStats(g);
+      var mx = Math.max.apply(null, stats.map(function(s){return s.score;}));
+      topScores.push(mx); acc.topSum+=mx;
+      acc.tie += g.rawTie?1:0;
+      acc.changesSum += g.leaderChanges;
+      if (g.r4Snapshot){
+        var r4max = Math.max.apply(null, g.r4Snapshot.map(function(s){return s.score;}));
+        var r4min = Math.min.apply(null, g.r4Snapshot.map(function(s){return s.score;}));
+        var leaders = g.r4Snapshot.filter(function(s){return s.score===r4max;}).map(function(s){return s.id;});
+        if (leaders.indexOf(g.winnerId)<0) acc.reversal++;
+      }
+      acc.gapSum += (mx - Math.min.apply(null, stats.map(function(s){return s.score;})));
+      stats.forEach(function(s){
+        pg++;
+        acc.pieces+=s.pieces; acc.same+=s.stats.same; acc.consec+=s.stats.consec; acc.color+=s.stats.color;
+        acc.scatterLines+=s.stats.scatterLines; acc.forced+=s.stats.forcedScatter;
+        if (s.flags>0) acc.flagsGE1++;
+      });
+    }
+    topScores.sort(function(a,b){return a-b;});
+    var pct = function(q){return topScores[Math.min(topScores.length-1, Math.floor(q*topScores.length))];};
+    var srcTotal = acc.same+acc.consec+acc.color;
+    return {
+      n:n, games:games, meanPieces:acc.pieces/pg,
+      srcSame: acc.same/srcTotal, srcConsec: acc.consec/srcTotal, srcColor: acc.color/srcTotal,
+      flagRate: acc.flagsGE1/pg, scatterLines: acc.scatterLines/pg, forced: acc.forced/pg,
+      tieRate: acc.tie/games, gapMean: acc.gapSum/games, changesMean: acc.changesSum/games,
+      reversalRate: acc.reversal/games,
+      topMean: acc.topSum/games, topP95: pct(0.95), topP99: pct(0.99), topMax: topScores[topScores.length-1]
+    };
+  }
+
+  $$('[data-batch]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var games = +btn.dataset.batch;
+      var n = +$('#batchN').value;
+      var seedRaw = $('#batchSeed').value;
+      var seed = seedRaw ? (+seedRaw>>>0) : (Math.floor(Math.random()*4294967295)>>>0);
+      $('#batchStatus').textContent = n+'인 '+games+'판 실행 중…';
+      setTimeout(function(){
+        var t0 = performance.now();
+        var row = runBatch(n, games, seed);
+        row.elapsedMs = Math.round(performance.now()-t0);
+        batchRows.push(row);
+        $('#batchStatus').textContent = n+'인 '+games+'판 완료 (시드 '+seed+', '+row.elapsedMs+'ms)';
+        renderBatchTable();
+        $('#batchSaveBtn').classList.remove('hidden');
+      }, 20);
+    });
+  });
+
+  function renderBatchTable(){
+    var html = '<table><thead><tr><th>인원</th><th>판수</th><th>조각</th><th>같은눈</th><th>연속</th><th>같은색</th>'+
+      '<th>완성률</th><th>흩어짐</th><th>강제흩어짐</th><th>동점</th><th>격차</th><th>선두교체</th><th>역전율</th>'+
+      '<th>1등평균</th><th>95%</th><th>99%</th><th>최대</th></tr></thead><tbody>';
+    batchRows.forEach(function(r){
+      html += '<tr><td>'+r.n+'</td><td>'+r.games+'</td><td>'+r.meanPieces.toFixed(2)+'</td>'+
+        '<td>'+(r.srcSame*100).toFixed(0)+'%</td><td>'+(r.srcConsec*100).toFixed(0)+'%</td><td>'+(r.srcColor*100).toFixed(0)+'%</td>'+
+        '<td>'+(r.flagRate*100).toFixed(1)+'%</td><td>'+r.scatterLines.toFixed(2)+'</td><td>'+r.forced.toFixed(2)+'</td>'+
+        '<td>'+(r.tieRate*100).toFixed(1)+'%</td><td>'+r.gapMean.toFixed(2)+'</td><td>'+r.changesMean.toFixed(2)+'</td>'+
+        '<td>'+(r.reversalRate*100).toFixed(1)+'%</td>'+
+        '<td>'+r.topMean.toFixed(2)+'</td><td>'+r.topP95+'</td><td>'+r.topP99+'</td><td>'+r.topMax+'</td></tr>';
+    });
+    html += '</tbody></table>';
+    $('#batchResult').innerHTML = html;
+  }
+
+  $('#batchSaveBtn').addEventListener('click', function(){
+    saveFile('taegukgi_batch_results.json', JSON.stringify(batchRows, null, 2));
+  });
+
+})();
+</script>
+</body>
+</html>
