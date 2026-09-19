@@ -59,7 +59,22 @@ button{font-family:var(--sans);cursor:pointer;}
 .pool-wrap{margin-bottom:10px;}
 .pool-wrap h3{font-size:13px;color:var(--ink-dim);margin-bottom:6px;font-family:var(--sans);font-weight:600;}
 .pool{display:flex;gap:8px;flex-wrap:wrap;}
-.bagline{font-size:12px;color:var(--ink-dim);margin-top:6px;}
+.bagline{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;}
+.bagchip{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;min-width:150px;flex:1;}
+.bagchip .sw{width:22px;height:22px;border-radius:5px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.bagchip .sw.black{background:var(--black-die);color:#fff;}
+.bagchip .sw.white{background:var(--white-die);color:var(--ink);}
+.bagchip .sw.red{background:var(--red-die);color:#fff;}
+.bagchip .sw.blue{background:var(--blue-die);color:#fff;}
+.bagchip .info{flex:1;min-width:0;}
+.bagchip .top{display:flex;justify-content:space-between;font-size:12.5px;}
+.bagchip .top b{font-family:var(--serif);font-size:15px;}
+.bagchip .bar{height:5px;background:var(--paper);border-radius:3px;margin:4px 0 3px;overflow:hidden;}
+.bagchip .bar i{display:block;height:100%;background:var(--gold);}
+.bagchip .bar i.low{background:var(--warn);}
+.bagchip .sub{font-size:10.5px;color:var(--ink-dim);}
+.bagtitle{font-size:12px;color:var(--ink-dim);margin-top:8px;display:flex;justify-content:space-between;align-items:center;}
+.bagtitle button{font-size:11px;padding:3px 8px;}
 
 .die{width:46px;height:46px;border-radius:9px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:700;position:relative;}
 .die span{font-size:17px;line-height:1;}
@@ -239,6 +254,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   <div class="pool-wrap">
     <h3 id="poolTitle">공용 풀</h3>
     <div class="pool" id="pool"></div>
+    <div class="bagtitle"><span>주머니에 남은 주사위 (색마다 16개 중)</span><button class="toggle-chip on" id="bagToggle">표시</button></div>
     <div class="bagline" id="bagLine"></div>
   </div>
 
@@ -370,6 +386,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       <li>주사위를 고르면 놓을 수 있는 칸이 노랗게 표시됩니다. <b>빨간 테두리</b> 칸에 놓으면 줄이 흩어집니다.</li>
       <li>판 아래 줄 표시는 각 줄에 무엇이 필요한지, 이미 불가능한지 알려 줍니다.</li>
       <li>오른쪽 상대 판 아래 표시는 상대가 완성 직전인 줄에 필요한 주사위입니다. 먼저 가져가 견제할 수 있습니다.</li>
+      <li>공용 풀 아래에는 색마다 주머니에 남은 주사위 수가 나옵니다. 남은 수가 적은 색은 다음 라운드 풀에 잘 나오지 않습니다. 6개 이하이면 빨간 막대로 표시됩니다.</li>
     </ul>
 
     <div class="foot"><button class="btn" id="rulesClose2">확인</button></div>
@@ -968,7 +985,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   var $ = function(s){ return document.querySelector(s); };
   var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
-  var STATE = { g: null, selectedPool: null, speed: 600, showHints: true, showLog: false,
+  var STATE = { g: null, selectedPool: null, speed: 600, showHints: true, showLog: false, showBag: true,
                 timer: null, handoffPendingFor: null, multiHuman: false, lastSeatKey: null };
 
   var COLOR_LABEL = {black:'검정',white:'흰색',red:'빨강',blue:'파랑'};
@@ -1119,7 +1136,22 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
         '<span>'+(d.value===1?'◉':d.value)+'</span><em>'+COLOR_MARK[d.color]+'</em></button>';
     }).join('');
     var bag = g.bag;
-    $('#bagLine').textContent = '주머니 · '+Engine.COLORS.map(function(c){return COLOR_LABEL[c]+' '+bag[c];}).join(' · ');
+    if (!STATE.showBag){ $('#bagLine').innerHTML=''; }
+    else {
+      var onBoard = {}, inPool = {};
+      Engine.COLORS.forEach(function(c){ onBoard[c]=0; inPool[c]=0; });
+      g.players.forEach(function(pl){ pl.board.forEach(function(d){ if(d) onBoard[d.color]++; }); });
+      g.pool.forEach(function(d){ inPool[d.color]++; });
+      $('#bagLine').innerHTML = Engine.COLORS.map(function(c){
+        var left = bag[c], pct = Math.max(0, Math.min(100, left/16*100));
+        var low = left <= 6 ? ' low' : '';
+        return '<div class="bagchip" title="'+COLOR_LABEL[c]+': 주머니 '+left+' · 풀 '+inPool[c]+' · 판 위 '+onBoard[c]+'">'+
+          '<div class="sw '+c+'">'+COLOR_MARK[c]+'</div>'+
+          '<div class="info"><div class="top"><span>'+COLOR_LABEL[c]+'</span><b>'+left+'</b></div>'+
+          '<div class="bar"><i class="'+low.trim()+'" style="width:'+pct+'%"></i></div>'+
+          '<div class="sub">풀 '+inPool[c]+' · 판 위 '+onBoard[c]+'</div></div></div>';
+      }).join('');
+    }
     $$('#pool [data-pool]').forEach(function(btn){
       btn.addEventListener('click', function(){ onPoolClick(+btn.dataset.pool); });
     });
@@ -1274,6 +1306,12 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   $('#hintToggle').addEventListener('click', function(){
     STATE.showHints = !STATE.showHints;
     $('#hintToggle').classList.toggle('on', STATE.showHints);
+    render();
+  });
+  $('#bagToggle').addEventListener('click', function(){
+    STATE.showBag = !STATE.showBag;
+    $('#bagToggle').classList.toggle('on', STATE.showBag);
+    $('#bagToggle').textContent = STATE.showBag ? '표시' : '숨김';
     render();
   });
   $('#logToggle').addEventListener('click', function(){
