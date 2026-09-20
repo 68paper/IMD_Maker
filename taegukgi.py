@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-태극기 주사위 게임 (가칭) — 로컬 실행 도구 (룰북 v0.9.3)
+태극기 주사위 게임 (가칭) — 로컬 실행 도구 (룰북 v0.9.5)
 
 사용법
   python taegukgi.py play                 # 웹 게임을 내 컴퓨터에서 열기
@@ -22,7 +22,7 @@ import threading
 import time
 import webbrowser
 
-VERSION = "0.9.3"
+VERSION = "0.9.5"
 
 # =====================================================================
 #  규칙 엔진 (웹 버전 index.html과 같은 규칙 · 같은 AI)
@@ -66,17 +66,16 @@ def lines_at(cell):
 
 
 def legal_cells(board):
+    # 룰북 v0.9.5: 감시의 눈(1)도 배치 기준이 된다.
     empties = [i for i in range(9) if board[i] is None]
     if len(empties) == 9:
         return empties
-    non1 = [i for i in range(9) if board[i] is not None and board[i][1] != 1]
-    if not non1:
-        return empties
     legal = set()
-    for p in non1:
-        for n in ADJ[p]:
-            if board[n] is None:
-                legal.add(n)
+    for p in range(9):
+        if board[p] is not None:
+            for n in ADJ[p]:
+                if board[n] is None:
+                    legal.add(n)
     return sorted(legal)
 
 
