@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-태극기 주사위 게임 (가칭) — 로컬 실행 도구 (룰북 v0.9.5)
+『3·1 만세 전야』 — 로컬 실행 도구 (룰북 v0.9.6)
 
 사용법
   python taegukgi.py play                 # 웹 게임을 내 컴퓨터에서 열기
@@ -22,7 +22,7 @@ import threading
 import time
 import webbrowser
 
-VERSION = "0.9.5"
+VERSION = "0.9.6"
 
 # =====================================================================
 #  규칙 엔진 (웹 버전 index.html과 같은 규칙 · 같은 AI)
@@ -88,7 +88,7 @@ class Player:
         self.tie_rand = tie_rand
         self.first_flag_round = None
         self.st = dict(same=0, consec=0, color=0, cross=0, scatter_lines=0, scatter_dice=0,
-                       forced=0, blocked=0, eyes_taken=0, eyes_removed=0)
+                       forced=0, blocked=0, eyes_taken=0, eyes_removed=0, withdraw=0)
 
     def pieces(self):
         return sum(self.parts.values())
@@ -306,6 +306,13 @@ class Game:
                         b[i] = None
                     pl.st["scatter_lines"] += 1
                     pl.st["scatter_dice"] += len(removed)
+        # 감시 철수(v0.9.6): 감시의 눈 셋으로만 채워진 줄은 셋 모두 주머니로
+        for line in lines_at(cell):
+            if full(b, line) and all(b[i][1] == 1 for i in line):
+                for i in line:
+                    self.bag[b[i][0]] += 1
+                    b[i] = None
+                pl.st["withdraw"] += 1
 
     def play_round(self):
         self.round += 1
@@ -382,7 +389,7 @@ class Game:
 def simulate(n, games, seed):
     base = random.Random(seed)
     acc = dict(pieces=0, taegeuk=0, same=0, consec=0, color=0, cross=0, scatter=0, scatter_dice=0,
-               forced=0, blocked=0, completers=0, two_flags=0, tie=0, gap=0, changes=0,
+               forced=0, blocked=0, withdraw=0, completers=0, two_flags=0, tie=0, gap=0, changes=0,
                reversal=0, zero_color=0)
     tops = []
     t0 = time.time()
@@ -400,7 +407,7 @@ def simulate(n, games, seed):
         for p in g.players:
             acc["pieces"] += p.pieces()
             acc["taegeuk"] += p.parts["taegeuk"]
-            for k in ("same", "consec", "color", "cross", "forced", "blocked"):
+            for k in ("same", "consec", "color", "cross", "forced", "blocked", "withdraw"):
                 acc[k] += p.st[k]
             acc["scatter"] += p.st["scatter_lines"]
             acc["scatter_dice"] += p.st["scatter_dice"]
@@ -422,6 +429,7 @@ def simulate(n, games, seed):
         "scatter_dice_per_player": acc["scatter_dice"] / pg,
         "forced_scatter_per_player": acc["forced"] / pg,
         "blocked_per_player": acc["blocked"] / pg,
+        "withdraw_per_player": acc["withdraw"] / pg,
         "flag_completion_rate": acc["completers"] / pg,
         "two_flags_rate": acc["two_flags"] / pg,
         "tie_rate": acc["tie"] / games,
@@ -444,7 +452,8 @@ def print_report(results):
         ("교차 완성 (인당)", "cross_per_player", "{:.3f}"),
         ("흩어진 줄 (인당)", "scatter_lines_per_player", "{:.2f}"),
         ("강제 흩어짐 (인당)", "forced_scatter_per_player", "{:.2f}"),
-        ("배치 불가 (인당)", "blocked_per_player", "{:.3f}"),
+        ("감시 철수 (인당)", "withdraw_per_player", "{:.3f}"),
+        ("배치 불가 (인당, 0이어야 함)", "blocked_per_player", "{:.3f}"),
         ("태극기 완성 비율", "flag_completion_rate", "{:.1%}"),
         ("태극기 2장 이상", "two_flags_rate", "{:.1%}"),
         ("1등 동점 비율", "tie_rate", "{:.1%}"),
@@ -459,7 +468,7 @@ def print_report(results):
     ]
     head = "{:<20}".format("지표") + "".join("{:>12}".format("%d인" % r["players"]) for r in results)
     print()
-    print("태극기 주사위 게임 시뮬레이션 (룰북 v%s)" % VERSION)
+    print("3·1 만세 전야 시뮬레이션 (룰북 v%s)" % VERSION)
     print("  " + " · ".join("%d인 %d판 (시드 %s, %.1f초)" % (r["players"], r["games"], r["seed"], r["seconds"]) for r in results))
     print("-" * 60)
     print(head)
@@ -495,7 +504,7 @@ def play(port, html):
         print("사용할 수 있는 포트를 찾지 못했습니다.")
         sys.exit(1)
     url = "http://127.0.0.1:%d/%s" % (p, name)
-    print("태극기 주사위 게임을 엽니다: %s" % url)
+    print("3·1 만세 전야을 엽니다: %s" % url)
     print("끝내려면 이 창에서 Ctrl + C 를 누르세요.")
     threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
@@ -507,7 +516,7 @@ def play(port, html):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="태극기 주사위 게임 로컬 실행 도구 (룰북 v%s)" % VERSION)
+    ap = argparse.ArgumentParser(description="3·1 만세 전야 로컬 실행 도구 (룰북 v%s)" % VERSION)
     sub = ap.add_subparsers(dest="cmd")
 
     p_play = sub.add_parser("play", help="웹 게임을 브라우저로 열기")
