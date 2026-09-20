@@ -13,7 +13,7 @@
 
 ## 바로 플레이하기
 
-**온라인**: `https://아이디.github.io/저장소이름/` (GitHub Pages 주소로 바꿔 주세요)
+**온라인**: `https://68paepr.github.io/IMD_Maker/` 
 
 **내 컴퓨터에서 (파일만)**: `index.html` 파일을 내려받아 브라우저로 열면 됩니다. 설치나 인터넷 연결이 필요 없습니다.
 
