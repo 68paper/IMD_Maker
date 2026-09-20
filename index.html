@@ -196,7 +196,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   <g fill="#111" transform="translate(242 151) rotate(-56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
   <g fill="#111" transform="translate(58 151) rotate(56.3)"><rect x="-26" y="-16" width="52" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="52" height="8"/></g>
   <g fill="#111" transform="translate(242 49) rotate(56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="52" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
-</svg><h1>3·1 만세 전야</h1><span class="sub">테스트 버전 · 룰북 v0.9.6</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
+</svg><h1>3·1 만세 전야</h1><span class="sub">테스트 버전 · 룰북 v0.9.7</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
 
 <div class="wrap">
 
@@ -216,10 +216,10 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       <div class="seatlist" id="seatlist"></div>
     </div>
     <div class="field">
-      <label for="setPickMode">주사위 놓는 순서</label>
-      <select id="setPickMode">
-        <option value="consecutive" selected>차례마다 두 개 연속 (기본)</option>
-        <option value="snake">한 개씩 두 바퀴 (두 번째는 역순, 테스트용)</option>
+      <label for="setRuleMode">규칙</label>
+      <select id="setRuleMode">
+        <option value="basic" selected>기본 규칙 — 조합 보상은 모두 원하는 조각</option>
+        <option value="advanced">심화 규칙 「괘 맞추기」 — 연속 · 같은 색은 놓인 눈의 괘</option>
       </select>
     </div>
     <div class="row">
@@ -248,8 +248,8 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
         <select id="batchN"><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option></select>
       </div>
       <div class="field">
-        <label for="batchPickMode">주사위 놓는 순서</label>
-        <select id="batchPickMode"><option value="consecutive" selected>두 개 연속</option><option value="snake">한 개씩 두 바퀴</option></select>
+        <label for="batchRuleMode">규칙</label>
+        <select id="batchRuleMode"><option value="basic" selected>기본</option><option value="advanced">심화 (괘 맞추기)</option></select>
       </div>
       <div class="field">
         <label>시드</label>
@@ -361,7 +361,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     <ol>
       <li><b>순서 정하기</b> — 점수가 가장 낮은 사람이 먼저, 가장 높은 사람이 마지막에 고릅니다. 같은 점수면 나중에 그 점수에 도착한 사람이 먼저입니다.</li>
       <li><b>풀 만들기</b> — 주머니에서 주사위를 (인원 × 2 + 2)개 꺼내 굴립니다. 판 위에 많이 깔린 색은 주머니에 적게 남아 잘 나오지 않습니다.</li>
-      <li><b>게임 설정에서 주사위 놓는 순서를 선택</b> — 스네이크 드래프트는 첫 바퀴에 한 개씩 놓고 두 번째 바퀴에는 역순으로 한 개씩 놓습니다. 두 개 연속 배치는 정해진 순서대로 각자 자신의 차례에 두 개를 놓습니다. 어느 방식이든 주사위 하나마다 조합과 흩어짐을 처리합니다.</li>
+      <li><b>고르고 놓기</b> — 순서대로 자기 차례에 풀에서 주사위를 <b>두 개 연달아</b> 가져와 놓습니다. 하나를 놓고 조합 · 흩어짐을 처리한 뒤 다음 하나를 가져옵니다.</li>
       <li><b>라운드 끝</b> — 풀에 남은 주사위는 주머니로 돌아갑니다.</li>
     </ol>
 
@@ -375,11 +375,11 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     <h3>조합</h3>
     <p>가로줄이나 세로줄이 가득 차면 판정합니다. 대각선은 없고, 감시의 눈이 있는 줄은 조합이 되지 않습니다.</p>
     <table>
-      <thead><tr><th>조합</th><th>조건</th><th>보상</th></tr></thead>
+      <thead><tr><th>조합</th><th>조건</th><th>기본 규칙 보상</th><th>심화 규칙 보상<br>「괘 맞추기」</th></tr></thead>
       <tbody>
-        <tr><td><b>같은 눈</b></td><td>눈이 같고 색이 모두 다름<br><span style="color:var(--ink-dim)">검정 4 · 빨강 4 · 파랑 4</span></td><td>판의 감시의 눈 1개 제거<br>+ 원하는 조각 2개</td></tr>
-        <tr><td><b>연속</b></td><td>색이 같고 눈이 연속<br><span style="color:var(--ink-dim)">파랑 3 · 4 · 5</span></td><td>세 눈 중 1개<br>+ 원하는 조각 1개</td></tr>
-        <tr><td><b>같은 색</b></td><td>색이 같고 눈이 모두 다름 (연속 아님)<br><span style="color:var(--ink-dim)">파랑 2 · 4 · 6</span></td><td>세 눈 중 1개</td></tr>
+        <tr><td><b>같은 눈</b></td><td>눈이 같고 색이 모두 다름<br><span style="color:var(--ink-dim)">검정 4 · 빨강 4 · 파랑 4</span></td><td>판의 감시의 눈 1개 제거<br>+ 원하는 조각 2개</td><td>기본과 같음</td></tr>
+        <tr><td><b>연속</b></td><td>색이 같고 눈이 연속<br><span style="color:var(--ink-dim)">파랑 3 · 4 · 5</span></td><td>원하는 조각 2개</td><td>세 눈 중 1개<br>+ 원하는 조각 1개</td></tr>
+        <tr><td><b>같은 색</b></td><td>색이 같고 눈이 모두 다름 (연속 아님)<br><span style="color:var(--ink-dim)">파랑 2 · 4 · 6</span></td><td>원하는 조각 1개</td><td>세 눈 중 1개</td></tr>
       </tbody>
     </table>
     <ul>
@@ -387,6 +387,8 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       <li>연속은 놓인 위치 순서와 상관없습니다. 5 · 3 · 4도 연속입니다.</li>
       <li>같은 색이어도 눈이 겹치면 (파랑 3 · 3 · 5) 조합이 아닙니다.</li>
       <li>"원하는 조각"은 태극 · 건 · 리 · 감 · 곤 중 무엇이든 고를 수 있습니다.</li>
+      <li>"세 눈 중 1개"는 그 줄에 놓인 눈의 괘(2 태극 · 3 건 · 4 리 · 5 감 · 6 곤) 가운데 하나를 고릅니다.</li>
+      <li>규칙은 게임 시작 전에 고릅니다. 처음 하는 사람이나 어린이와 함께라면 기본 규칙을 권합니다.</li>
     </ul>
 
     <h3>조합이 되면</h3>
@@ -577,7 +579,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       if (a.arrival !== b.arrival) return b.arrival - a.arrival;
       return g.rng() - 0.5;
     }).map(function (p) { return p.id; });
-    g.order = settingsPickMode(g) === 'consecutive' ? firstPass : firstPass.concat(firstPass.slice().reverse());
+    g.order = firstPass;
     g.orderAt = 0;
     var need = g.settings.n * 2 + 2;
     var drawn = drawFromBag(g.bag, need, g.rng);
@@ -591,7 +593,9 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     beginTurn(g);
   }
 
-  function settingsPickMode(g) { return g.settings.pickMode === 'snake' ? 'snake' : 'consecutive'; }
+  // 룰북 v0.9.7: 차례마다 두 개 연속으로 고정
+  function settingsPickMode(g) { return 'consecutive'; }
+  function ruleModeOf(g) { return g.settings.ruleMode === 'advanced' ? 'advanced' : 'basic'; }
   function beginTurn(g) { g.placementsThisTurn = 0; g.phase = 'idle'; prepareStep(g); }
 
   function prepareStep(g) {
@@ -599,7 +603,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var cells = validCells(p.board);
     if (cells.length === 0 || g.pool.length === 0) {
       g.phase = 'blocked_pool';
-      emit(g, 'blocked', {}, 'R' + g.round + ' · ' + p.name + ' · ' + (settingsPickMode(g)==='consecutive' ? '배치 '+(g.placementsThisTurn+1)+'/2' : (g.orderAt < g.players.length ? '첫째' : '둘째')+' 바퀴') + ' 불가 · 놓을 곳 없음');
+      emit(g, 'blocked', {}, 'R' + g.round + ' · ' + p.name + ' · 배치 '+(g.placementsThisTurn+1)+'/2 불가 · 놓을 곳 없음');
       return;
     }
     g.phase = 'place';
@@ -839,11 +843,15 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     if (g.pending.rewardIndex >= g.pending.rewardTotal) { return finishCombo(g); }
     if (c.type !== 'same' && !g.pending.rewardValueOptions) g.pending.rewardValueOptions = Array.from(new Set(c.values));
     var lineOpts = c.type === 'same' ? [] : g.pending.rewardValueOptions.map(pieceIdForValue);
-    // 연속: 첫 번째는 세 눈 중에서, 두 번째는 원하는 조각 (룰북 v0.9.4)
-    if (c.type === 'same') g.pending.rewardOptions = PIECE_KEYS.slice();
-    else if (c.type === 'consec') g.pending.rewardOptions = (g.pending.rewardIndex === 0) ? lineOpts : PIECE_KEYS.slice();
-    else g.pending.rewardOptions = lineOpts;
-    g.pending.rewardFree = (g.pending.rewardOptions.length === PIECE_KEYS.length && (c.type === 'same' || (c.type === 'consec' && g.pending.rewardIndex === 1)));
+    // 룰북 v0.9.7
+    //  기본 규칙: 모든 조합의 보상이 원하는 조각 (같은 눈 2 · 연속 2 · 같은 색 1)
+    //  심화 규칙 「괘 맞추기」: 연속은 세 눈 중 1개 + 원하는 조각 1개, 같은 색은 세 눈 중 1개
+    var free;
+    if (c.type === 'same' || ruleModeOf(g) === 'basic') free = true;
+    else if (c.type === 'consec') free = (g.pending.rewardIndex === 1);
+    else free = false;
+    g.pending.rewardOptions = free ? PIECE_KEYS.slice() : lineOpts;
+    g.pending.rewardFree = free;
     if (g.pending.rewardOptions.length === 1 && current(g).type === 'ai') { chooseReward(g, g.pending.rewardOptions[0]); return; }
     g.phase = 'combo_reward';
   }
@@ -928,7 +936,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   function finishBlocked(g) { g.pending = null; g.placementsThisTurn++; advance(g); }
 
   function advance(g) {
-    if (settingsPickMode(g)==='consecutive' && g.placementsThisTurn < 2 && g.pool.length > 0) { prepareStep(g); return; }
+    if (g.placementsThisTurn < 2 && g.pool.length > 0) { prepareStep(g); return; }
     g.orderAt++;
     if (g.orderAt >= g.order.length) { endRound(g); return; }
     beginTurn(g);
@@ -1056,7 +1064,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var types = $$('#seatlist select').slice(0,n).map(function(s){return s.value;});
     var seedRaw = $('#setSeed').value;
     var seed = seedRaw ? (+seedRaw >>> 0) : (Math.floor(Math.random()*4294967295) >>> 0);
-    return { n:n, types:types, seed:seed, speed:+$('#setSpeed').value, pickMode:$('#setPickMode').value };
+    return { n:n, types:types, seed:seed, speed:+$('#setSpeed').value, pickMode:'consecutive', ruleMode:$('#setRuleMode').value };
   }
 
   $('#startBtn').addEventListener('click', function(){
@@ -1149,7 +1157,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var g = STATE.g; if(!g) return;
     var p = Engine.current(g);
     $('#roundLabel').textContent = '라운드 '+g.round+' / 8';
-    $('#orderLabel').textContent = (g.settings.pickMode!=='snake' ? '두 개 연속 · ' : '첫 바퀴 → 둘째 바퀴(역순) · ')+g.order.map(function(id){return g.players[id].name;}).join(' → ');
+    $('#orderLabel').textContent = (g.settings.ruleMode==='advanced' ? '심화 규칙 · ' : '기본 규칙 · ')+g.order.map(function(id){return g.players[id].name;}).join(' → ');
 
     renderScoreboard(g,p);
     renderPool(g,p);
@@ -1173,7 +1181,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   }
 
   function renderPool(g,p){
-    $('#poolTitle').textContent = '공용 풀 · '+p.name+' 차례 ('+(g.settings.pickMode!=='snake' ? (g.placementsThisTurn+1)+' / 2' : (g.orderAt < g.players.length ? '첫째' : '둘째')+' 바퀴')+')';
+    $('#poolTitle').textContent = '공용 풀 · '+p.name+' 차례 ('+(g.placementsThisTurn+1)+' / 2)';
     var blocked = (g.phase==='blocked_pool');
     $('#pool').innerHTML = g.pool.map(function(d,i){
       var sel = (STATE.selectedPool===i) ? ' selected':'';
@@ -1400,7 +1408,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 
   $('#copyResultBtn').addEventListener('click', function(){
     var g = STATE.g; var rank = ranking(g);
-    var lines = ['3·1 만세 전야 결과', '설정: '+g.settings.n+'인 · '+(g.settings.pickMode==='snake'?'스네이크 드래프트':'두 개 연속')+' · 시드 '+g.settings.seed];
+    var lines = ['3·1 만세 전야 결과', '설정: '+g.settings.n+'인 · '+(g.settings.ruleMode==='advanced'?'심화 규칙(괘 맞추기)':'기본 규칙')+' · 시드 '+g.settings.seed];
     rank.forEach(function(p,i){
       lines.push((i+1)+'위 '+p.name+': '+p.score+'점 / 조각 '+Engine.pieceTotal(p)+'개 / 완성 '+Engine.flagsOf(p)+'장 / 같은눈 '+p.stats.same+' 연속 '+p.stats.consec+' 같은색 '+p.stats.color+' / 흩어짐 '+p.stats.scatterLines+'줄');
     });
@@ -1415,7 +1423,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 
   function gameJSON(g){
     return JSON.stringify({
-      version: 'tg-0.9.6', settings: g.settings,
+      version: 'tg-0.9.7', settings: g.settings,
       players: g.players.map(function(p){
         return {id:p.id, name:p.name, type:p.type, score:p.score, arrival:p.arrival, parts:p.parts,
           flags: Engine.flagsOf(p), pieces: Engine.pieceTotal(p), stats:p.stats};
@@ -1449,13 +1457,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   });
 
   var batchRows = [];
-  function runBatch(n, games, seedBase, pickMode){
-    var acc = {pieces:0, same:0, consec:0, color:0, scatterLines:0, forced:0, flagsGE1:0, tie:0, topSum:0,
+  function runBatch(n, games, seedBase, ruleMode){
+    var acc = {pieces:0, same:0, consec:0, color:0, scatterLines:0, forced:0, withdrawn:0, flagsGE1:0, tie:0, topSum:0,
       gapSum:0, changesSum:0, reversal:0};
     var topScores = []; var pg=0;
     for (var gi=0; gi<games; gi++){
       var seed = (seedBase + gi*7919 + n*104729) >>> 0;
-      var settings = {n:n, types:new Array(n).fill('ai'), seed:seed, speed:0, pickMode:pickMode};
+      var settings = {n:n, types:new Array(n).fill('ai'), seed:seed, speed:0, pickMode:'consecutive', ruleMode:ruleMode};
       var g = Engine.startGame(settings);
       Engine.runFullAI(g, 200000);
       if (!g.done) continue;
@@ -1474,7 +1482,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       stats.forEach(function(s){
         pg++;
         acc.pieces+=s.pieces; acc.same+=s.stats.same; acc.consec+=s.stats.consec; acc.color+=s.stats.color;
-        acc.scatterLines+=s.stats.scatterLines; acc.forced+=s.stats.forcedScatter;
+        acc.scatterLines+=s.stats.scatterLines; acc.forced+=s.stats.forcedScatter; acc.withdrawn+=(s.stats.withdrawn||0);
         if (s.flags>0) acc.flagsGE1++;
       });
     }
@@ -1482,7 +1490,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var pct = function(q){return topScores[Math.min(topScores.length-1, Math.floor(q*topScores.length))];};
     var srcTotal = acc.same+acc.consec+acc.color;
     return {
-      n:n, games:games, pickMode:pickMode, meanPieces:acc.pieces/pg,
+      n:n, games:games, ruleMode:ruleMode, meanPieces:acc.pieces/pg, withdrawn: acc.withdrawn/pg,
       srcSame: acc.same/srcTotal, srcConsec: acc.consec/srcTotal, srcColor: acc.color/srcTotal,
       flagRate: acc.flagsGE1/pg, scatterLines: acc.scatterLines/pg, forced: acc.forced/pg,
       tieRate: acc.tie/games, gapMean: acc.gapSum/games, changesMean: acc.changesSum/games,
@@ -1495,13 +1503,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     btn.addEventListener('click', function(){
       var games = +btn.dataset.batch;
       var n = +$('#batchN').value;
-      var pickMode = $('#batchPickMode').value;
+      var ruleMode = $('#batchRuleMode').value;
       var seedRaw = $('#batchSeed').value;
       var seed = seedRaw ? (+seedRaw>>>0) : (Math.floor(Math.random()*4294967295)>>>0);
       $('#batchStatus').textContent = n+'인 '+games+'판 실행 중…';
       setTimeout(function(){
         var t0 = performance.now();
-        var row = runBatch(n, games, seed, pickMode);
+        var row = runBatch(n, games, seed, ruleMode);
         row.elapsedMs = Math.round(performance.now()-t0);
         batchRows.push(row);
         $('#batchStatus').textContent = n+'인 '+games+'판 완료 (시드 '+seed+', '+row.elapsedMs+'ms)';
@@ -1512,13 +1520,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   });
 
   function renderBatchTable(){
-    var html = '<table><thead><tr><th>인원</th><th>방식</th><th>판수</th><th>조각</th><th>같은눈</th><th>연속</th><th>같은색</th>'+
-      '<th>완성률</th><th>흩어짐</th><th>강제흩어짐</th><th>동점</th><th>격차</th><th>선두교체</th><th>역전율</th>'+
+    var html = '<table><thead><tr><th>인원</th><th>규칙</th><th>판수</th><th>조각</th><th>같은눈</th><th>연속</th><th>같은색</th>'+
+      '<th>완성률</th><th>흩어짐</th><th>강제흩어짐</th><th>감시철수</th><th>동점</th><th>격차</th><th>선두교체</th><th>역전율</th>'+
       '<th>1등평균</th><th>95%</th><th>99%</th><th>최대</th></tr></thead><tbody>';
     batchRows.forEach(function(r){
-      html += '<tr><td>'+r.n+'</td><td>'+(r.pickMode==='snake'?'스네이크':'연속')+'</td><td>'+r.games+'</td><td>'+r.meanPieces.toFixed(2)+'</td>'+
+      html += '<tr><td>'+r.n+'</td><td>'+(r.ruleMode==='advanced'?'심화':'기본')+'</td><td>'+r.games+'</td><td>'+r.meanPieces.toFixed(2)+'</td>'+
         '<td>'+(r.srcSame*100).toFixed(0)+'%</td><td>'+(r.srcConsec*100).toFixed(0)+'%</td><td>'+(r.srcColor*100).toFixed(0)+'%</td>'+
-        '<td>'+(r.flagRate*100).toFixed(1)+'%</td><td>'+r.scatterLines.toFixed(2)+'</td><td>'+r.forced.toFixed(2)+'</td>'+
+        '<td>'+(r.flagRate*100).toFixed(1)+'%</td><td>'+r.scatterLines.toFixed(2)+'</td><td>'+r.forced.toFixed(2)+'</td><td>'+r.withdrawn.toFixed(2)+'</td>'+
         '<td>'+(r.tieRate*100).toFixed(1)+'%</td><td>'+r.gapMean.toFixed(2)+'</td><td>'+r.changesMean.toFixed(2)+'</td>'+
         '<td>'+(r.reversalRate*100).toFixed(1)+'%</td>'+
         '<td>'+r.topMean.toFixed(2)+'</td><td>'+r.topP95+'</td><td>'+r.topP99+'</td><td>'+r.topMax+'</td></tr>';

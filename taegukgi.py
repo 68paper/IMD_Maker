@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-『3·1 만세 전야』 — 로컬 실행 도구 (룰북 v0.9.6)
+『3·1 만세 전야』 — 로컬 실행 도구 (룰북 v0.9.7)
 
 사용법
   python taegukgi.py play                 # 웹 게임을 내 컴퓨터에서 열기
@@ -8,6 +8,7 @@
   python taegukgi.py sim -n 3 -g 500      # 3인 500판
   python taegukgi.py sim --all -g 1000    # 3 · 4 · 5인 모두
   python taegukgi.py sim --json out.json  # 결과를 JSON으로 저장
+  python taegukgi.py sim --rule advanced  # 심화 규칙(괘 맞추기)으로 실행
 
 파이썬 3.8 이상, 표준 라이브러리만 사용합니다.
 """
@@ -22,7 +23,7 @@ import threading
 import time
 import webbrowser
 
-VERSION = "0.9.6"
+VERSION = "0.9.7"
 
 # =====================================================================
 #  규칙 엔진 (웹 버전 index.html과 같은 규칙 · 같은 AI)
@@ -174,11 +175,16 @@ def resolve(g, pl, line, ctype, values, keep=None):
             pl.st["eyes_removed"] += 1
         for _ in range(2):
             pl.parts[pick_least(PIECES, pl, rng)] += 1
+    elif g.rule == "basic":
+        # 룰북 v0.9.7 기본 규칙: 연속 = 원하는 조각 2개, 같은 색 = 원하는 조각 1개
+        for _ in range(REWARD[ctype]):
+            pl.parts[pick_least(PIECES, pl, rng)] += 1
     elif ctype == "consec":
-        # 룰북 v0.9.3: 세 눈 중 1개 + 원하는 조각 1개
+        # 심화 규칙 「괘 맞추기」: 세 눈 중 1개 + 원하는 조각 1개
         pl.parts[pick_least(line_opts, pl, rng)] += 1
         pl.parts[pick_least(PIECES, pl, rng)] += 1
     else:
+        # 심화 규칙 「괘 맞추기」: 세 눈 중 1개
         pl.parts[pick_least(line_opts, pl, rng)] += 1
 
 
@@ -254,8 +260,9 @@ def choose_move(board, pool, rng):
 
 
 class Game:
-    def __init__(self, n, seed):
+    def __init__(self, n, seed, rule="basic"):
         self.n = n
+        self.rule = rule
         self.rng = random.Random(seed)
         self.bag = {c: 16 for c in COLORS}
         self.players = [Player(i, self.rng.random()) for i in range(n)]
@@ -386,7 +393,7 @@ class Game:
 #  시뮬레이션 집계
 # =====================================================================
 
-def simulate(n, games, seed):
+def simulate(n, games, seed, rule="basic"):
     base = random.Random(seed)
     acc = dict(pieces=0, taegeuk=0, same=0, consec=0, color=0, cross=0, scatter=0, scatter_dice=0,
                forced=0, blocked=0, withdraw=0, completers=0, two_flags=0, tie=0, gap=0, changes=0,
@@ -394,7 +401,7 @@ def simulate(n, games, seed):
     tops = []
     t0 = time.time()
     for _ in range(games):
-        g = Game(n, base.getrandbits(32)).run()
+        g = Game(n, base.getrandbits(32), rule).run()
         sc = [p.score() for p in g.players]
         tops.append(max(sc))
         acc["tie"] += g.raw_tie
@@ -417,7 +424,7 @@ def simulate(n, games, seed):
     tops.sort()
     pct = lambda q: tops[min(len(tops) - 1, int(q * len(tops)))]
     return {
-        "version": VERSION, "players": n, "games": games, "seed": seed,
+        "version": VERSION, "rule": rule, "players": n, "games": games, "seed": seed,
         "seconds": round(time.time() - t0, 2),
         "pieces_per_player": acc["pieces"] / pg,
         "taegeuk_share": acc["taegeuk"] / max(1, acc["pieces"]),
@@ -468,7 +475,8 @@ def print_report(results):
     ]
     head = "{:<20}".format("지표") + "".join("{:>12}".format("%d인" % r["players"]) for r in results)
     print()
-    print("3·1 만세 전야 시뮬레이션 (룰북 v%s)" % VERSION)
+    rule_name = {"basic": "기본 규칙", "advanced": "심화 규칙(괘 맞추기)"}[results[0]["rule"]]
+    print("3·1 만세 전야 시뮬레이션 (룰북 v%s · %s)" % (VERSION, rule_name))
     print("  " + " · ".join("%d인 %d판 (시드 %s, %.1f초)" % (r["players"], r["games"], r["seed"], r["seconds"]) for r in results))
     print("-" * 60)
     print(head)
@@ -529,6 +537,8 @@ def main():
     p_sim.add_argument("-s", "--seed", type=int, default=None, help="난수 시드 (비우면 무작위)")
     p_sim.add_argument("--all", action="store_true", help="3 · 4 · 5인 모두 실행")
     p_sim.add_argument("--json", default=None, help="결과를 저장할 JSON 파일 이름")
+    p_sim.add_argument("--rule", choices=["basic", "advanced"], default="basic",
+                       help="basic: 기본 규칙(모든 보상 원하는 조각, 기본값) · advanced: 심화 규칙(괘 맞추기)")
 
     args = ap.parse_args()
     if args.cmd == "play":
@@ -540,7 +550,7 @@ def main():
         results = []
         for n in ns:
             print("%d인 %d판 실행 중…" % (n, args.games), flush=True)
-            results.append(simulate(n, args.games, seed))
+            results.append(simulate(n, args.games, seed, args.rule))
         print_report(results)
         if args.json:
             with open(args.json, "w", encoding="utf-8") as f:
