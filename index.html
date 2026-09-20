@@ -196,7 +196,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   <g fill="#111" transform="translate(242 151) rotate(-56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
   <g fill="#111" transform="translate(58 151) rotate(56.3)"><rect x="-26" y="-16" width="52" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="52" height="8"/></g>
   <g fill="#111" transform="translate(242 49) rotate(56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="52" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
-</svg><h1>태극기 주사위 게임</h1><span class="sub">테스트 버전 · 룰북 v0.9.4</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
+</svg><h1>태극기 주사위 게임</h1><span class="sub">테스트 버전 · 룰북 v0.9.5</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
 
 <div class="wrap">
 
@@ -368,8 +368,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     <h3>놓을 수 있는 칸</h3>
     <ul>
       <li>판이 비어 있으면 아무 칸에나 놓을 수 있습니다.</li>
-      <li>그 외에는 이미 놓인 주사위의 <b>상하좌우</b> 빈칸에만 놓을 수 있습니다. 감시의 눈은 기준이 되지 않습니다.</li>
-      <li>단, 감시의 눈이 아닌 주사위 기준으로 놓을 곳이 하나도 없으면(고립되면) 그때만 감시의 눈의 이웃 빈칸도 놓을 수 있습니다.</li>
+      <li>그 외에는 이미 놓인 주사위의 <b>상하좌우</b> 빈칸에만 놓을 수 있습니다. 감시의 눈도 기준이 됩니다.</li>
       <li>가져간 주사위는 <b>반드시</b> 놓아야 합니다.</li>
       <li>놓을 곳이 없으면 풀의 주사위 1개와 판의 감시의 눈 1개를 골라 주머니로 돌려보냅니다. 이것으로 배치 한 번을 씁니다.</li>
     </ul>
@@ -484,13 +483,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     return line.some(function (i) { return board[i] && board[i].value !== 1; });
   }
   function validCells(board) {
-    var empty = [], nonEye = [], occupied = [];
+    // 룰북 v0.9.5: 감시의 눈(1)도 배치 기준이 된다.
+    // 판이 비어 있으면 아무 칸, 그 외에는 놓인 주사위(1 포함)의 상하좌우 빈칸.
+    var empty = [], occupied = [];
     for (var i = 0; i < 9; i++) {
-      if (!board[i]) empty.push(i);
-      else { occupied.push(i); if (board[i].value !== 1) nonEye.push(i); }
+      if (!board[i]) empty.push(i); else occupied.push(i);
     }
     if (empty.length === 9) return empty;
-    if (nonEye.length === 0) return empty; // 판에 1만 있으면 모든 빈칸
     var adj = function (i) {
       var r = Math.floor(i / 3), c = i % 3, out = [];
       if (r > 0) out.push(i - 3);
@@ -500,14 +499,8 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       return out;
     };
     var anchorSet = {};
-    nonEye.forEach(function (a) { adj(a).forEach(function (n) { anchorSet[n] = true; }); });
-    var result = empty.filter(function (i) { return anchorSet[i]; });
-    if (result.length > 0) return result;
-    // 안전장치(룰북 v0.9.4): 1이 아닌 주사위 기준으로 놓을 곳이 전혀 없으면(고립),
-    // 그때만 감시의 눈의 이웃 빈칸도 허용한다.
-    var anchorSet2 = {};
-    occupied.forEach(function (a) { adj(a).forEach(function (n) { anchorSet2[n] = true; }); });
-    return empty.filter(function (i) { return anchorSet2[i]; });
+    occupied.forEach(function (a) { adj(a).forEach(function (n) { anchorSet[n] = true; }); });
+    return empty.filter(function (i) { return anchorSet[i]; });
   }
 
   function makePlayer(id, type, name) {
@@ -1411,7 +1404,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 
   function gameJSON(g){
     return JSON.stringify({
-      version: 'tg-0.9.4', settings: g.settings,
+      version: 'tg-0.9.5', settings: g.settings,
       players: g.players.map(function(p){
         return {id:p.id, name:p.name, type:p.type, score:p.score, arrival:p.arrival, parts:p.parts,
           flags: Engine.flagsOf(p), pieces: Engine.pieceTotal(p), stats:p.stats};
