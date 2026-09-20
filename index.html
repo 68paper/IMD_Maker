@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>태극기 주사위 게임 — 테스트 버전</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307111f'/%3E%3Cpath d='M32 12a20 20 0 1 1 0 40 10 10 0 1 0 0-20 10 10 0 1 1 0-20' fill='%23ef4444'/%3E%3Cpath d='M32 52a20 20 0 1 1 0-40 10 10 0 1 0 0 20 10 10 0 1 1 0 20' fill='%233b82f6'/%3E%3C/svg%3E">
 <style>
 :root{
   --paper:#F6F2E7; --paper2:#FBF8F1; --ink:#211C15; --ink-dim:#5A5347;
@@ -20,8 +21,8 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0 0 .4em;}
 button{font-family:var(--sans);cursor:pointer;}
 .hidden{display:none !important;}
 .wrap{max-width:1180px;margin:0 auto;padding:14px 16px 60px;}
-.topbar{display:flex;align-items:baseline;gap:10px;padding:14px 16px 6px;}
-.topbar .mark{font-size:22px;}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 16px 6px;}
+.topbar .mark{width:37px;height:25px;object-fit:contain;flex:none;}
 .topbar h1{font-size:19px;margin:0;}
 .topbar .sub{color:var(--ink-dim);font-size:12.5px;}
 
@@ -109,11 +110,21 @@ button.die[disabled]{opacity:.3;cursor:default;}
 
 .flagcard{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;}
 .flagcard h4{margin:0 0 6px;font-size:12.5px;color:var(--ink-dim);font-weight:600;}
-.pieces{display:flex;gap:6px;flex-wrap:wrap;}
-.piece{border:1.5px solid var(--line);border-radius:8px;padding:7px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;background:#fff;min-width:48px;font-size:11px;color:var(--ink-dim);}
-.piece b{font-size:15px;color:var(--ink);font-weight:700;}
-.piece.selectable{border-color:var(--gold);background:var(--gold-soft);cursor:pointer;}
-.piece[disabled]{opacity:.35;}
+.flag-canvas{width:min(100%,340px);aspect-ratio:3/2;margin:6px auto;background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(33,28,21,.1);display:grid;grid-template-columns:1fr 1.25fr 1fr;grid-template-rows:1fr 1fr;gap:0;padding:8px;}
+.flag-piece{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:2px dashed transparent;border-radius:7px;background:transparent;color:var(--ink);padding:0;min-width:0;}
+.flag-piece.geon{grid-column:1;grid-row:1;}.flag-piece.gam{grid-column:3;grid-row:1;}.flag-piece.ri{grid-column:1;grid-row:2;}.flag-piece.gon{grid-column:3;grid-row:2;}
+.flag-piece.taegeuk{grid-column:2;grid-row:1 / 3;}
+.flag-piece .symbol{width:min(100%,82px);height:72px;display:block;}
+.flag-piece.taegeuk .symbol{width:clamp(54px,15vw,93px);height:clamp(54px,15vw,93px);}
+.flag-piece svg{width:100%;height:100%;display:block;}
+.flag-piece .piece-label{font-size:12px;line-height:1.2;white-space:nowrap;}
+.flag-piece .piece-count{position:absolute;right:0;top:0;font-size:12px;background:var(--paper2);border:1px solid var(--line);border-radius:9px;padding:0 4px;}
+.flag-piece.empty .symbol{opacity:.16;}.flag-piece.empty .piece-label{color:var(--ink-dim);}
+.flag-piece.filled{background:#e8dcbe;border-color:#9c7a32;}
+.flag-piece.filled::after{content:'✓';position:absolute;left:3px;top:1px;color:#5b431c;font-size:15px;font-weight:800;}
+.flag-piece.selectable{border-color:var(--gold);background:var(--gold-soft);cursor:pointer;}
+.flag-piece.selectable .symbol{opacity:1;}.flag-piece.selectable:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}
+.flag-piece:disabled{cursor:default;}
 .flagcount{margin-top:6px;font-size:12.5px;}
 
 .others{display:flex;flex-direction:column;gap:10px;}
@@ -175,7 +186,17 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 </head>
 <body>
 
-<div class="topbar"><span class="mark">☯</span><h1>태극기 주사위 게임</h1><span class="sub">테스트 버전 · 룰북 v0.9.3</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
+<div class="topbar"><svg class="mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" role="img" aria-label="태극기">
+  <rect width="300" height="200" fill="#fff"/>
+  <g transform="translate(150 100) rotate(33.69)">
+    <circle r="50" fill="#cd2e3a"/>
+    <path d="M-50 0a50 50 0 0 0 100 0 25 25 0 0 0-50 0 25 25 0 0 1-50 0" fill="#0047a0"/>
+  </g>
+  <g fill="#111" transform="translate(58 49) rotate(-56.3)"><rect x="-26" y="-16" width="52" height="8"/><rect x="-26" y="-4" width="52" height="8"/><rect x="-26" y="8" width="52" height="8"/></g>
+  <g fill="#111" transform="translate(242 151) rotate(-56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
+  <g fill="#111" transform="translate(58 151) rotate(56.3)"><rect x="-26" y="-16" width="52" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="52" height="8"/></g>
+  <g fill="#111" transform="translate(242 49) rotate(56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="52" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
+</svg><h1>태극기 주사위 게임</h1><span class="sub">테스트 버전 · 룰북 v0.9.4</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
 
 <div class="wrap">
 
@@ -193,6 +214,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     <div class="field">
       <label>자리</label>
       <div class="seatlist" id="seatlist"></div>
+    </div>
+    <div class="field">
+      <label for="setPickMode">주사위 놓는 순서</label>
+      <select id="setPickMode">
+        <option value="consecutive" selected>차례마다 두 개 연속 (기본)</option>
+        <option value="snake">한 개씩 두 바퀴 (두 번째는 역순, 테스트용)</option>
+      </select>
     </div>
     <div class="row">
       <div class="field">
@@ -218,6 +246,10 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       <div class="field">
         <label>인원</label>
         <select id="batchN"><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option></select>
+      </div>
+      <div class="field">
+        <label for="batchPickMode">주사위 놓는 순서</label>
+        <select id="batchPickMode"><option value="consecutive" selected>두 개 연속</option><option value="snake">한 개씩 두 바퀴</option></select>
       </div>
       <div class="field">
         <label>시드</label>
@@ -265,8 +297,8 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       <div class="linehints" id="linehints"></div>
       <div class="message" id="message"></div>
       <div class="flagcard">
-        <h4>태극기 카드</h4>
-        <div class="pieces" id="pieces"></div>
+        <h4>태극기 카드 · 보상을 받으면 깃발에서 조각을 누르세요</h4>
+        <div class="flag-canvas" id="pieces" role="group" aria-label="태극기 조각 선택"></div>
         <div class="flagcount" id="flagcount"></div>
       </div>
     </div>
@@ -329,7 +361,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     <ol>
       <li><b>순서 정하기</b> — 점수가 가장 낮은 사람이 먼저, 가장 높은 사람이 마지막에 고릅니다. 같은 점수면 나중에 그 점수에 도착한 사람이 먼저입니다.</li>
       <li><b>풀 만들기</b> — 주머니에서 주사위를 (인원 × 2 + 2)개 꺼내 굴립니다. 판 위에 많이 깔린 색은 주머니에 적게 남아 잘 나오지 않습니다.</li>
-      <li><b>배치 두 번</b> — 자기 차례에 풀에서 주사위 1개를 골라 판에 놓고, 조합과 흩어짐을 처리한 뒤 한 번 더 합니다.</li>
+      <li><b>게임 설정에서 주사위 놓는 순서를 선택</b> — 스네이크 드래프트는 첫 바퀴에 한 개씩 놓고 두 번째 바퀴에는 역순으로 한 개씩 놓습니다. 두 개 연속 배치는 정해진 순서대로 각자 자신의 차례에 두 개를 놓습니다. 어느 방식이든 주사위 하나마다 조합과 흩어짐을 처리합니다.</li>
       <li><b>라운드 끝</b> — 풀에 남은 주사위는 주머니로 돌아갑니다.</li>
     </ol>
 
@@ -337,6 +369,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     <ul>
       <li>판이 비어 있으면 아무 칸에나 놓을 수 있습니다.</li>
       <li>그 외에는 이미 놓인 주사위의 <b>상하좌우</b> 빈칸에만 놓을 수 있습니다. 감시의 눈은 기준이 되지 않습니다.</li>
+      <li>단, 감시의 눈이 아닌 주사위 기준으로 놓을 곳이 하나도 없으면(고립되면) 그때만 감시의 눈의 이웃 빈칸도 놓을 수 있습니다.</li>
       <li>가져간 주사위는 <b>반드시</b> 놓아야 합니다.</li>
       <li>놓을 곳이 없으면 풀의 주사위 1개와 판의 감시의 눈 1개를 골라 주머니로 돌려보냅니다. 이것으로 배치 한 번을 씁니다.</li>
     </ul>
@@ -451,13 +484,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     return line.some(function (i) { return board[i] && board[i].value !== 1; });
   }
   function validCells(board) {
-    var empty = [], nonEye = [];
+    var empty = [], nonEye = [], occupied = [];
     for (var i = 0; i < 9; i++) {
       if (!board[i]) empty.push(i);
-      else if (board[i].value !== 1) nonEye.push(i);
+      else { occupied.push(i); if (board[i].value !== 1) nonEye.push(i); }
     }
     if (empty.length === 9) return empty;
-    if (nonEye.length === 0) return empty;
+    if (nonEye.length === 0) return empty; // 판에 1만 있으면 모든 빈칸
     var adj = function (i) {
       var r = Math.floor(i / 3), c = i % 3, out = [];
       if (r > 0) out.push(i - 3);
@@ -468,7 +501,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     };
     var anchorSet = {};
     nonEye.forEach(function (a) { adj(a).forEach(function (n) { anchorSet[n] = true; }); });
-    return empty.filter(function (i) { return anchorSet[i]; });
+    var result = empty.filter(function (i) { return anchorSet[i]; });
+    if (result.length > 0) return result;
+    // 안전장치(룰북 v0.9.4): 1이 아닌 주사위 기준으로 놓을 곳이 전혀 없으면(고립),
+    // 그때만 감시의 눈의 이웃 빈칸도 허용한다.
+    var anchorSet2 = {};
+    occupied.forEach(function (a) { adj(a).forEach(function (n) { anchorSet2[n] = true; }); });
+    return empty.filter(function (i) { return anchorSet2[i]; });
   }
 
   function makePlayer(id, type, name) {
@@ -537,11 +576,12 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   function startRound(g) {
     if (g.round >= 8) { return endGame(g); }
     g.round++;
-    g.order = g.players.slice().sort(function (a, b) {
+    var firstPass = g.players.slice().sort(function (a, b) {
       if (a.score !== b.score) return a.score - b.score;
       if (a.arrival !== b.arrival) return b.arrival - a.arrival;
       return g.rng() - 0.5;
     }).map(function (p) { return p.id; });
+    g.order = settingsPickMode(g) === 'consecutive' ? firstPass : firstPass.concat(firstPass.slice().reverse());
     g.orderAt = 0;
     var need = g.settings.n * 2 + 2;
     var drawn = drawFromBag(g.bag, need, g.rng);
@@ -555,6 +595,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     beginTurn(g);
   }
 
+  function settingsPickMode(g) { return g.settings.pickMode === 'snake' ? 'snake' : 'consecutive'; }
   function beginTurn(g) { g.placementsThisTurn = 0; g.phase = 'idle'; prepareStep(g); }
 
   function prepareStep(g) {
@@ -562,7 +603,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var cells = validCells(p.board);
     if (cells.length === 0 || g.pool.length === 0) {
       g.phase = 'blocked_pool';
-      emit(g, 'blocked', {}, 'R' + g.round + ' · ' + p.name + ' · 배치 ' + (g.placementsThisTurn + 1) + '/2 불가 · 놓을 곳 없음');
+      emit(g, 'blocked', {}, 'R' + g.round + ' · ' + p.name + ' · ' + (settingsPickMode(g)==='consecutive' ? '배치 '+(g.placementsThisTurn+1)+'/2' : (g.orderAt < g.players.length ? '첫째' : '둘째')+' 바퀴') + ' 불가 · 놓을 곳 없음');
       return;
     }
     g.phase = 'place';
@@ -802,12 +843,12 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     if (g.pending.rewardIndex >= g.pending.rewardTotal) { return finishCombo(g); }
     if (c.type !== 'same' && !g.pending.rewardValueOptions) g.pending.rewardValueOptions = Array.from(new Set(c.values));
     var lineOpts = c.type === 'same' ? [] : g.pending.rewardValueOptions.map(pieceIdForValue);
-    // 연속: 첫 번째는 세 눈 중에서, 두 번째는 원하는 조각 (룰북 v0.9.3)
+    // 연속: 첫 번째는 세 눈 중에서, 두 번째는 원하는 조각 (룰북 v0.9.4)
     if (c.type === 'same') g.pending.rewardOptions = PIECE_KEYS.slice();
     else if (c.type === 'consec') g.pending.rewardOptions = (g.pending.rewardIndex === 0) ? lineOpts : PIECE_KEYS.slice();
     else g.pending.rewardOptions = lineOpts;
     g.pending.rewardFree = (g.pending.rewardOptions.length === PIECE_KEYS.length && (c.type === 'same' || (c.type === 'consec' && g.pending.rewardIndex === 1)));
-    if (g.pending.rewardOptions.length === 1) { chooseReward(g, g.pending.rewardOptions[0]); return; }
+    if (g.pending.rewardOptions.length === 1 && current(g).type === 'ai') { chooseReward(g, g.pending.rewardOptions[0]); return; }
     g.phase = 'combo_reward';
   }
   function aiChooseReward(g) {
@@ -883,11 +924,10 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   function finishBlocked(g) { g.pending = null; g.placementsThisTurn++; advance(g); }
 
   function advance(g) {
-    if (g.placementsThisTurn >= 2 || g.pool.length === 0) {
-      g.orderAt++;
-      if (g.orderAt >= g.order.length) { endRound(g); return; }
-      beginTurn(g);
-    } else { prepareStep(g); }
+    if (settingsPickMode(g)==='consecutive' && g.placementsThisTurn < 2 && g.pool.length > 0) { prepareStep(g); return; }
+    g.orderAt++;
+    if (g.orderAt >= g.order.length) { endRound(g); return; }
+    beginTurn(g);
   }
 
   function endRound(g) {
@@ -1012,7 +1052,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var types = $$('#seatlist select').slice(0,n).map(function(s){return s.value;});
     var seedRaw = $('#setSeed').value;
     var seed = seedRaw ? (+seedRaw >>> 0) : (Math.floor(Math.random()*4294967295) >>> 0);
-    return { n:n, types:types, seed:seed, speed:+$('#setSpeed').value };
+    return { n:n, types:types, seed:seed, speed:+$('#setSpeed').value, pickMode:$('#setPickMode').value };
   }
 
   $('#startBtn').addEventListener('click', function(){
@@ -1021,7 +1061,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     STATE.multiHuman = settings.types.filter(function(t){return t==='human';}).length >= 2;
     STATE.g = Engine.startGame(settings);
     STATE.selectedPool = null;
-    STATE.handoffPendingFor = null; STATE.lastSeatKey = null;
+    STATE.handoffPendingFor = null; STATE.lastSeatKey = null; STATE.lastActorId = null;
     show('game');
     driveTurn();
   });
@@ -1038,7 +1078,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var settings = STATE.g.settings;
     STATE.multiHuman = settings.types.filter(function(t){return t==='human';}).length >= 2;
     STATE.g = Engine.startGame(settings);
-    STATE.selectedPool=null; STATE.handoffPendingFor=null; STATE.lastSeatKey=null;
+    STATE.selectedPool=null; STATE.handoffPendingFor=null; STATE.lastSeatKey=null; STATE.lastActorId=null;
     show('game'); driveTurn();
   });
 
@@ -1048,12 +1088,14 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     if (g.done){ renderResult(); show('result'); return; }
     var p = Engine.current(g);
     var key = g.round+':'+g.orderAt+':'+p.id;
-    if (p.type==='human' && STATE.multiHuman && g.placementsThisTurn===0 && STATE.handoffPendingFor!==key && STATE.lastSeatKey!==key){
+    var sameAsBefore = (STATE.lastActorId === p.id);
+    if (p.type==='human' && STATE.multiHuman && g.placementsThisTurn===0 && !sameAsBefore && STATE.handoffPendingFor!==key && STATE.lastSeatKey!==key){
       STATE.handoffPendingFor = key;
       $('#handoffName').textContent = p.name+' 차례입니다';
       $('#handoff').classList.remove('hidden');
       return;
     }
+    STATE.lastActorId = p.id;
     render();
     if (p.type==='ai' && !STATE.rulesOpen){
       clearTimeout(STATE.timer);
@@ -1103,7 +1145,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var g = STATE.g; if(!g) return;
     var p = Engine.current(g);
     $('#roundLabel').textContent = '라운드 '+g.round+' / 8';
-    $('#orderLabel').textContent = '이번 라운드 순서 · '+g.order.map(function(id){return g.players[id].name;}).join(' → ');
+    $('#orderLabel').textContent = (g.settings.pickMode!=='snake' ? '두 개 연속 · ' : '첫 바퀴 → 둘째 바퀴(역순) · ')+g.order.map(function(id){return g.players[id].name;}).join(' → ');
 
     renderScoreboard(g,p);
     renderPool(g,p);
@@ -1127,7 +1169,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   }
 
   function renderPool(g,p){
-    $('#poolTitle').textContent = '공용 풀 · '+p.name+' 차례 ('+(g.placementsThisTurn+1)+' / 2)';
+    $('#poolTitle').textContent = '공용 풀 · '+p.name+' 차례 ('+(g.settings.pickMode!=='snake' ? (g.placementsThisTurn+1)+' / 2' : (g.orderAt < g.players.length ? '첫째' : '둘째')+' 바퀴')+')';
     var blocked = (g.phase==='blocked_pool');
     $('#pool').innerHTML = g.pool.map(function(d,i){
       var sel = (STATE.selectedPool===i) ? ' selected':'';
@@ -1222,10 +1264,26 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 
   function renderPieces(g,p){
     var opts = (g.phase==='combo_reward') ? g.pending.rewardOptions : [];
+    var completed = Engine.flagsOf(p);
+    var displayLayer = completed > 0 && Engine.PIECE_KEYS.every(function(k){return p.parts[k] === completed;}) ? completed-1 : completed;
+    var taegeuk = '<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(33.69 50 50)"><circle cx="50" cy="50" r="47" fill="#cd2e3a"/><path d="M3 50a47 47 0 0 0 94 0 23.5 23.5 0 0 0-47 0 23.5 23.5 0 0 1-47 0" fill="#0047a0"/></g></svg>';
+    function trigram(k){
+      var bars = {geon:['full','full','full'],gam:['split','full','split'],ri:['full','split','full'],gon:['split','split','split']}[k];
+      var angle = (k==='geon'||k==='gon') ? -56.3 : 56.3;
+      var rows = bars.map(function(bar,i){
+        var y=23+i*12;
+        return bar==='full' ? '<rect x="14" y="'+y+'" width="52" height="8"/>' :
+          '<rect x="14" y="'+y+'" width="23" height="8"/><rect x="43" y="'+y+'" width="23" height="8"/>';
+      }).join('');
+      return '<svg viewBox="0 0 80 78" aria-hidden="true"><g fill="#211c15" transform="rotate('+angle+' 40 39)">'+rows+'</g></svg>';
+    }
     $('#pieces').innerHTML = Engine.PIECE_KEYS.map(function(k){
       var sel = (p.type==='human' && opts.indexOf(k)>=0);
-      return '<button class="piece'+(sel?' selectable':'')+'" data-piece="'+k+'" '+(sel?'':'disabled')+'>'+
-        '<span>'+Engine.PIECE_NAME[k]+'</span><b>'+p.parts[k]+'</b></button>';
+      var filled = p.parts[k] > displayLayer;
+      var name = Engine.PIECE_NAME[k];
+      return '<button type="button" class="flag-piece '+k+(filled?' filled':' empty')+(sel?' selectable':'')+'" data-piece="'+k+'" aria-label="'+name+' 조각 '+p.parts[k]+'개'+(sel?', 선택 가능':'')+'" '+(sel?'':'disabled')+'>'+
+        '<span class="symbol" aria-hidden="true">'+(k==='taegeuk'?taegeuk:trigram(k))+'</span><span class="piece-label">'+name+'</span>'+
+        (p.parts[k]>1?'<span class="piece-count" aria-hidden="true">×'+p.parts[k]+'</span>':'')+'</button>';
     }).join('');
     $$('#pieces [data-piece]').forEach(function(btn){
       btn.addEventListener('click', function(){
@@ -1233,7 +1291,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
         Engine.chooseReward(STATE.g, btn.dataset.piece); afterHumanAction();
       });
     });
-    $('#flagcount').textContent = '완성 '+Engine.flagsOf(p)+'장 · 조각 '+Engine.pieceTotal(p)+'개 · 점수 '+p.score;
+    $('#flagcount').textContent = '완성 '+completed+'장 · 태극기 '+(displayLayer+1)+'장째 표시 · 조각 '+Engine.pieceTotal(p)+'개 · 점수 '+p.score;
   }
 
   function renderMessage(g,p){
@@ -1297,7 +1355,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   }
 
   function renderLog(g){
-    if (!STATE.showLog) return;
+    if (!STATE.showLog || !g) return;
     $('#logbox').innerHTML = g.events.slice().reverse().slice(0,80).map(function(e){
       return '<div class="entry">'+e.summary+'</div>';
     }).join('');
@@ -1338,7 +1396,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 
   $('#copyResultBtn').addEventListener('click', function(){
     var g = STATE.g; var rank = ranking(g);
-    var lines = ['태극기 주사위 게임 결과', '설정: '+g.settings.n+'인 · 시드 '+g.settings.seed];
+    var lines = ['태극기 주사위 게임 결과', '설정: '+g.settings.n+'인 · '+(g.settings.pickMode==='snake'?'스네이크 드래프트':'두 개 연속')+' · 시드 '+g.settings.seed];
     rank.forEach(function(p,i){
       lines.push((i+1)+'위 '+p.name+': '+p.score+'점 / 조각 '+Engine.pieceTotal(p)+'개 / 완성 '+Engine.flagsOf(p)+'장 / 같은눈 '+p.stats.same+' 연속 '+p.stats.consec+' 같은색 '+p.stats.color+' / 흩어짐 '+p.stats.scatterLines+'줄');
     });
@@ -1353,7 +1411,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 
   function gameJSON(g){
     return JSON.stringify({
-      version: 'tg-0.9.3', settings: g.settings,
+      version: 'tg-0.9.4', settings: g.settings,
       players: g.players.map(function(p){
         return {id:p.id, name:p.name, type:p.type, score:p.score, arrival:p.arrival, parts:p.parts,
           flags: Engine.flagsOf(p), pieces: Engine.pieceTotal(p), stats:p.stats};
@@ -1387,13 +1445,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   });
 
   var batchRows = [];
-  function runBatch(n, games, seedBase){
+  function runBatch(n, games, seedBase, pickMode){
     var acc = {pieces:0, same:0, consec:0, color:0, scatterLines:0, forced:0, flagsGE1:0, tie:0, topSum:0,
       gapSum:0, changesSum:0, reversal:0};
     var topScores = []; var pg=0;
     for (var gi=0; gi<games; gi++){
       var seed = (seedBase + gi*7919 + n*104729) >>> 0;
-      var settings = {n:n, types:new Array(n).fill('ai'), seed:seed, speed:0};
+      var settings = {n:n, types:new Array(n).fill('ai'), seed:seed, speed:0, pickMode:pickMode};
       var g = Engine.startGame(settings);
       Engine.runFullAI(g, 200000);
       if (!g.done) continue;
@@ -1420,7 +1478,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var pct = function(q){return topScores[Math.min(topScores.length-1, Math.floor(q*topScores.length))];};
     var srcTotal = acc.same+acc.consec+acc.color;
     return {
-      n:n, games:games, meanPieces:acc.pieces/pg,
+      n:n, games:games, pickMode:pickMode, meanPieces:acc.pieces/pg,
       srcSame: acc.same/srcTotal, srcConsec: acc.consec/srcTotal, srcColor: acc.color/srcTotal,
       flagRate: acc.flagsGE1/pg, scatterLines: acc.scatterLines/pg, forced: acc.forced/pg,
       tieRate: acc.tie/games, gapMean: acc.gapSum/games, changesMean: acc.changesSum/games,
@@ -1433,12 +1491,13 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     btn.addEventListener('click', function(){
       var games = +btn.dataset.batch;
       var n = +$('#batchN').value;
+      var pickMode = $('#batchPickMode').value;
       var seedRaw = $('#batchSeed').value;
       var seed = seedRaw ? (+seedRaw>>>0) : (Math.floor(Math.random()*4294967295)>>>0);
       $('#batchStatus').textContent = n+'인 '+games+'판 실행 중…';
       setTimeout(function(){
         var t0 = performance.now();
-        var row = runBatch(n, games, seed);
+        var row = runBatch(n, games, seed, pickMode);
         row.elapsedMs = Math.round(performance.now()-t0);
         batchRows.push(row);
         $('#batchStatus').textContent = n+'인 '+games+'판 완료 (시드 '+seed+', '+row.elapsedMs+'ms)';
@@ -1449,11 +1508,11 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   });
 
   function renderBatchTable(){
-    var html = '<table><thead><tr><th>인원</th><th>판수</th><th>조각</th><th>같은눈</th><th>연속</th><th>같은색</th>'+
+    var html = '<table><thead><tr><th>인원</th><th>방식</th><th>판수</th><th>조각</th><th>같은눈</th><th>연속</th><th>같은색</th>'+
       '<th>완성률</th><th>흩어짐</th><th>강제흩어짐</th><th>동점</th><th>격차</th><th>선두교체</th><th>역전율</th>'+
       '<th>1등평균</th><th>95%</th><th>99%</th><th>최대</th></tr></thead><tbody>';
     batchRows.forEach(function(r){
-      html += '<tr><td>'+r.n+'</td><td>'+r.games+'</td><td>'+r.meanPieces.toFixed(2)+'</td>'+
+      html += '<tr><td>'+r.n+'</td><td>'+(r.pickMode==='snake'?'스네이크':'연속')+'</td><td>'+r.games+'</td><td>'+r.meanPieces.toFixed(2)+'</td>'+
         '<td>'+(r.srcSame*100).toFixed(0)+'%</td><td>'+(r.srcConsec*100).toFixed(0)+'%</td><td>'+(r.srcColor*100).toFixed(0)+'%</td>'+
         '<td>'+(r.flagRate*100).toFixed(1)+'%</td><td>'+r.scatterLines.toFixed(2)+'</td><td>'+r.forced.toFixed(2)+'</td>'+
         '<td>'+(r.tieRate*100).toFixed(1)+'%</td><td>'+r.gapMean.toFixed(2)+'</td><td>'+r.changesMean.toFixed(2)+'</td>'+
