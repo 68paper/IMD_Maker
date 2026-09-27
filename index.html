@@ -44,9 +44,6 @@ button{font-family:var(--sans);cursor:pointer;}
 .seat select{flex:1;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;}
 
 #screen-game{display:none;}
-body[data-rule="basic"] .r-adv, body[data-rule="advanced"] .r-basic{display:none;}
-.rules-mode-note{display:none;margin:4px 0 10px;padding:6px 10px;border-radius:8px;background:var(--accent-soft, #efe6cf);font-size:14px;}
-body[data-rule] .rules-mode-note{display:block;}
 .gheader{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px;background:var(--paper2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;}
 .gheader .round{font-family:var(--serif);font-size:17px;}
 .gheader .order{font-size:12.5px;color:var(--ink-dim);}
@@ -199,7 +196,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   <g fill="#111" transform="translate(242 151) rotate(-56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
   <g fill="#111" transform="translate(58 151) rotate(56.3)"><rect x="-26" y="-16" width="52" height="8"/><rect x="-26" y="-4" width="23" height="8"/><rect x="3" y="-4" width="23" height="8"/><rect x="-26" y="8" width="52" height="8"/></g>
   <g fill="#111" transform="translate(242 49) rotate(56.3)"><rect x="-26" y="-16" width="23" height="8"/><rect x="3" y="-16" width="23" height="8"/><rect x="-26" y="-4" width="52" height="8"/><rect x="-26" y="8" width="23" height="8"/><rect x="3" y="8" width="23" height="8"/></g>
-</svg><h1>3·1 만세 전야</h1><span class="sub">테스트 버전 · 룰북 v0.9.7</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
+</svg><h1>3·1 만세 전야</h1><span class="sub">테스트 버전 · 룰북 v0.9.9</span><button class="btn small secondary" id="rulesBtnTop" style="margin-left:auto;">규칙 보기</button></div>
 
 <div class="wrap">
 
@@ -300,7 +297,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       <div class="linehints" id="linehints"></div>
       <div class="message" id="message"></div>
       <div class="flagcard">
-        <h4 id="flagHead">태극기 카드 · 보상을 받으면 깃발에서 조각을 누르세요</h4>
+        <h4>태극기 카드 · 보상을 받으면 깃발에서 조각을 누르세요</h4>
         <div class="flag-canvas" id="pieces" role="group" aria-label="태극기 조각 선택"></div>
         <div class="flagcount" id="flagcount"></div>
       </div>
@@ -340,7 +337,6 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   <div class="rules">
     <button class="btn small secondary close" id="rulesClose" aria-label="규칙 닫기">닫기</button>
     <h2 id="rulesTitle">게임 규칙</h2>
-    <p class="rules-mode-note" id="rulesModeNote"></p>
     <p class="lead">1919년 3월 1일을 앞두고, 사람들은 각자의 자리에서 태극기를 그리고 모았습니다. 주사위를 모아 태극과 괘를 얻고, 태극기를 완성해 그날을 준비하세요.</p>
 
     <h3>목표</h3>
@@ -363,7 +359,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
 
     <h3>한 라운드</h3>
     <ol>
-      <li><b>순서 정하기</b> — 점수가 가장 낮은 사람이 먼저, 가장 높은 사람이 마지막에 고릅니다. 같은 점수면 나중에 그 점수에 도착한 사람이 먼저입니다.</li>
+      <li><b>순서 정하기</b> — 점수가 가장 낮은 사람이 먼저, 가장 높은 사람이 마지막에 고릅니다. 같은 점수면 먼저 그 점수에 와 있던 사람(쌓인 말의 아래)이 먼저 고르고, 나중에 올라선 사람(위)이 나중에 고릅니다.</li>
       <li><b>풀 만들기</b> — 주머니에서 주사위를 (인원 × 2 + 2)개 꺼내 굴립니다. 판 위에 많이 깔린 색은 주머니에 적게 남아 잘 나오지 않습니다.</li>
       <li><b>고르고 놓기</b> — 순서대로 자기 차례에 풀에서 주사위를 <b>두 개 연달아</b> 가져와 놓습니다. 하나를 놓고 조합 · 흩어짐을 처리한 뒤 다음 하나를 가져옵니다.</li>
       <li><b>라운드 끝</b> — 풀에 남은 주사위는 주머니로 돌아갑니다.</li>
@@ -379,11 +375,11 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     <h3>조합</h3>
     <p>가로줄이나 세로줄이 가득 차면 판정합니다. 대각선은 없고, 감시의 눈이 있는 줄은 조합이 되지 않습니다.</p>
     <table>
-      <thead><tr><th>조합</th><th>조건</th><th class="r-basic">기본 규칙 보상</th><th class="r-adv">심화 규칙 보상<br>「괘 맞추기」</th></tr></thead>
+      <thead><tr><th>조합</th><th>조건</th><th>기본 규칙 보상</th><th>심화 규칙 보상<br>「괘 맞추기」</th></tr></thead>
       <tbody>
-        <tr><td><b>같은 눈</b></td><td>눈이 같고 색이 모두 다름<br><span style="color:var(--ink-dim)">검정 4 · 빨강 4 · 파랑 4</span></td><td class="r-basic">판의 감시의 눈 1개 제거<br>+ 원하는 조각 2개</td><td class="r-adv">판의 감시의 눈 1개 제거<br>+ 원하는 조각 2개</td></tr>
-        <tr><td><b>연속</b></td><td>색이 같고 눈이 연속<br><span style="color:var(--ink-dim)">파랑 3 · 4 · 5</span></td><td class="r-basic">원하는 조각 2개</td><td class="r-adv">세 눈 중 1개<br>+ 원하는 조각 1개</td></tr>
-        <tr><td><b>같은 색</b></td><td>색이 같고 눈이 모두 다름 (연속 아님)<br><span style="color:var(--ink-dim)">파랑 2 · 4 · 6</span></td><td class="r-basic">원하는 조각 1개</td><td class="r-adv">세 눈 중 1개</td></tr>
+        <tr><td><b>같은 눈</b></td><td>눈이 같고 색이 모두 다름<br><span style="color:var(--ink-dim)">검정 4 · 빨강 4 · 파랑 4</span></td><td>판의 감시의 눈 1개 제거<br>+ 원하는 조각 2개</td><td>기본과 같음</td></tr>
+        <tr><td><b>연속</b></td><td>색이 같고 눈이 연속<br><span style="color:var(--ink-dim)">파랑 3 · 4 · 5</span></td><td>원하는 조각 2개</td><td>세 눈 중 1개<br>+ 원하는 조각 1개</td></tr>
+        <tr><td><b>같은 색</b></td><td>색이 같고 눈이 모두 다름 (연속 아님)<br><span style="color:var(--ink-dim)">파랑 2 · 4 · 6</span></td><td>원하는 조각 1개</td><td>세 눈 중 1개</td></tr>
       </tbody>
     </table>
     <ul>
@@ -391,8 +387,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       <li>연속은 놓인 위치 순서와 상관없습니다. 5 · 3 · 4도 연속입니다.</li>
       <li>같은 색이어도 눈이 겹치면 (파랑 3 · 3 · 5) 조합이 아닙니다.</li>
       <li>"원하는 조각"은 태극 · 건 · 리 · 감 · 곤 중 무엇이든 고를 수 있습니다.</li>
-      <li class="r-adv">"세 눈 중 1개"는 그 줄에 놓인 눈의 괘(2 태극 · 3 건 · 4 리 · 5 감 · 6 곤) 가운데 하나를 고릅니다.</li>
-      <li class="r-basic">기본 규칙에서는 어떤 조합이든 받을 조각의 <b>개수</b>만 기억하면 됩니다. 종류는 언제나 마음대로 고릅니다.</li>
+      <li>"세 눈 중 1개"는 그 줄에 놓인 눈의 괘(2 태극 · 3 건 · 4 리 · 5 감 · 6 곤) 가운데 하나를 고릅니다.</li>
       <li>규칙은 게임 시작 전에 고릅니다. 처음 하는 사람이나 어린이와 함께라면 기본 규칙을 권합니다.</li>
     </ul>
 
@@ -421,7 +416,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     </ul>
 
     <h3>승리</h3>
-    <p>8라운드가 끝나면 점수가 가장 높은 사람이 이깁니다. 같은 점수면 <b>그 점수에 먼저 도착한 사람</b>이 이깁니다.</p>
+    <p>8라운드가 끝나면 점수가 가장 높은 사람이 이깁니다. 같은 점수면 <b>그 점수에 나중에 올라선 사람</b>(쌓인 말의 위)이 이깁니다.</p>
 
     <h3>화면 도움말</h3>
     <ul>
@@ -581,7 +576,8 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     g.round++;
     var firstPass = g.players.slice().sort(function (a, b) {
       if (a.score !== b.score) return a.score - b.score;
-      if (a.arrival !== b.arrival) return b.arrival - a.arrival;
+      // 룰북 v0.9.9: 같은 칸에서는 위에 올라선 말(나중 도착)이 앞선다 → 아래 말(먼저 도착)이 먼저 고른다
+      if (a.arrival !== b.arrival) return a.arrival - b.arrival;
       return g.rng() - 0.5;
     }).map(function (p) { return p.id; });
     g.order = firstPass;
@@ -954,7 +950,9 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     var scores = g.players.map(function (p) { return { name: p.name, score: p.score }; });
     var mx = Math.max.apply(null, g.players.map(function (p) { return p.score; }));
     var leaders = g.players.filter(function (p) { return p.score === mx; });
-    g.leaderHistory.push(leaders.length === 1 ? leaders[0].id : null);
+    // 룰북 v0.9.9: 동점이면 위에 올라선 말(나중 도착)이 선두
+    leaders.sort(function (a, b) { return b.arrival - a.arrival; });
+    g.leaderHistory.push(leaders.length ? leaders[0].id : null);
     if (g.round === 4) g.r4Snapshot = g.players.map(function (p) { return { id: p.id, score: p.score }; });
     emit(g, 'round_end', { scores: scores }, 'R' + g.round + ' 종료');
     startRound(g);
@@ -964,7 +962,8 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     g.done = true; g.phase = 'end';
     var mx = Math.max.apply(null, g.players.map(function (p) { return p.score; }));
     var tied = g.players.filter(function (p) { return p.score === mx; });
-    tied.sort(function (a, b) { return a.arrival - b.arrival; });
+    // 룰북 v0.9.9: 같은 점수면 나중에 올라선 말(위)이 승리
+    tied.sort(function (a, b) { return b.arrival - a.arrival; });
     g.winnerId = tied[0].id; g.rawTie = tied.length > 1;
     var changes = 0, prev = null;
     g.leaderHistory.forEach(function (l) { if (l != null) { if (prev != null && l !== prev) changes++; prev = l; } });
@@ -1083,20 +1082,7 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
     driveTurn();
   });
 
-  function setRuleView(mode){
-    // 게임 중에는 선택한 규칙만 보이게, 설정 화면에서는 두 규칙을 모두 보이게
-    if (mode) {
-      document.body.setAttribute('data-rule', mode);
-      $('#rulesModeNote').textContent = '지금 게임: ' + (mode==='advanced' ? '심화 규칙 「괘 맞추기」' : '기본 규칙') + ' — 아래 보상 표에는 이 규칙만 표시됩니다.';
-      $('#flagHead').textContent = mode==='advanced'
-        ? '태극기 카드 · 조합 보상을 받으면 깃발에서 조각을 누르세요 (같은 색 · 연속 첫 조각은 줄에 놓인 눈의 괘만)'
-        : '태극기 카드 · 조합 보상을 받으면 깃발에서 원하는 조각을 누르세요';
-    } else {
-      document.body.removeAttribute('data-rule');
-    }
-  }
   function show(which){
-    setRuleView(which==='game' && STATE.g ? (STATE.g.settings.ruleMode==='advanced' ? 'advanced' : 'basic') : null);
     $('#screen-setup').style.display = which==='setup' ? 'block':'none';
     $('#screen-game').style.display = which==='game' ? 'block':'none';
     $('#screen-result').style.display = which==='result' ? 'block':'none';
@@ -1342,13 +1328,8 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
       case 'combo_keep': msg = '판 위에서 빛나는 칸 중, 남길 주사위를 고르세요.'; break;
       case 'combo_eye': msg = '판 위에서 치울 감시의 눈을 고르세요.'; break;
       case 'combo_reward':
-        var ruleAdv = g.settings.ruleMode==='advanced';
-        var optNames = Engine.PIECE_KEYS.filter(function(k){ return g.pending.rewardOptions.indexOf(k) >= 0; }).map(function(k){ return Engine.PIECE_NAME[k]; }).join(' · ');
-        var how = g.pending.rewardFree
-          ? '원하는 조각 (태극 · 건 · 리 · 감 · 곤 중 아무거나)'
-          : '이 줄에 놓인 눈의 괘 중에서: ' + optNames;
         msg = '받을 조각을 고르세요. ('+(g.pending.rewardIndex+1)+' / '+g.pending.rewardTotal+') · '+Engine.TYPE_NAME[g.pending.combo.type]+' 조합 · '+
-          how + (ruleAdv ? '' : ' · 기본 규칙');
+          (g.pending.rewardFree ? '원하는 조각' : '세 주사위의 눈 중에서');
         break;
       default: msg='';
     }
@@ -1415,11 +1396,11 @@ table.result th{color:var(--ink-dim);font-weight:600;font-size:12px;}
   });
 
   function ranking(g){
-    return g.players.slice().sort(function(a,b){ if(b.score!==a.score) return b.score-a.score; return a.arrival-b.arrival; });
+    return g.players.slice().sort(function(a,b){ if(b.score!==a.score) return b.score-a.score; return b.arrival-a.arrival; });
   }
   function renderResult(){
     var g = STATE.g; var rank = ranking(g); var w = g.players[g.winnerId];
-    $('#resultLead').textContent = w.name+' 승리 · '+w.score+'점'+(g.rawTie?' (동점, 먼저 도착)':'');
+    $('#resultLead').textContent = w.name+' 승리 · '+w.score+'점'+(g.rawTie?' (동점, 나중에 올라섬)':'');
     $('#resultTable').innerHTML = '<thead><tr><th>순위</th><th>플레이어</th><th>점수</th><th>같은눈/연속/같은색</th><th>흩어짐</th><th>완성</th></tr></thead><tbody>'+
       rank.map(function(p,i){
         return '<tr><td>'+(i+1)+'</td><td class="rankname">'+p.name+'</td><td>'+p.score+'</td>'+
